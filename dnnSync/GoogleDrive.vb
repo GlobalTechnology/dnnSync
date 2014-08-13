@@ -65,7 +65,7 @@ Public Class GoogleDrive
                             Answer = "Implemented"
 
                         End If
-                        Console.Write(code & ": " & Answer & vbNewLine)
+                        Module1.Log(code & ": " & Answer & vbNewLine)
                         Dim min = From c In ministry Where c.GetPropertyValue("min_code") = code
 
                         If min.Count > 0 Then
@@ -164,7 +164,7 @@ Public Class GoogleDrive
                         Dim DS = (getCellEntry(row, "L" & I).ToLower = "1").ToString.ToLower
                         Dim Stage = getCellEntry(row, "D" & I).ToLower
 
-                        Console.Write(getCellEntry(row, "C" & I) & ": " & Stage & vbNewLine)
+                        Module1.Log(getCellEntry(row, "C" & I) & ": " & Stage & vbNewLine)
 
                         Dim insert As New GR_NET.Entity()
                         insert.ID = min_id

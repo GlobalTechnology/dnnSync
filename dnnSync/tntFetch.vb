@@ -49,7 +49,7 @@ Public Class tntFetch
 
                         If min.Count > 0 Then
                             Try
-
+                                Module1.Log(min.First.GetPropertyValue("name"))
 
                                 Dim tnt_url = tntmpdlineArray(1).Substring(0, tntmpdlineArray(1).LastIndexOf("dataquery/"))
                                 Dim t = New tnt.TntMPDDataServerWebService2
@@ -76,7 +76,7 @@ Public Class tntFetch
 
 
                             Catch ex As Exception
-                                Console.WriteLine("Problem syncing " & min.First.GetPropertyValue("name"))
+                                Module1.Log("Problem syncing " & min.First.GetPropertyValue("name"))
                             End Try
 
 

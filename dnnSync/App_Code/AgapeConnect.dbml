@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="dnn_dev" Class="AgapeConnectDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=.\sqlexpress;Initial Catalog=dnn_dev;Integrated Security=True" SettingsObjectName="dnnSync.My.MySettings" SettingsPropertyName="AgapeConnectConnectionString1" Provider="System.Data.SqlClient" />
+  <Connection Mode="AppSettings" ConnectionString="Data Source=tcp:lhyw8k0s0l.database.windows.net,1433;Initial Catalog=agapeconnect-2014-4-12-18-15;User ID=agapeconnect@lhyw8k0s0l" SettingsObjectName="dnnSync.My.MySettings" SettingsPropertyName="AgapeConnectConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.Users" Member="Users">
     <Type Name="User">
       <Column Name="UserID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />

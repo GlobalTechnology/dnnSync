@@ -124,7 +124,7 @@ Partial Public Class AgapeConnectDataContext
   #End Region
 	
 	Public Sub New()
-		MyBase.New(Global.dnnSync.My.MySettings.Default.AgapeConnectConnectionString1, mappingSource)
+		MyBase.New(Global.dnnSync.My.MySettings.Default.AgapeConnectConnectionString, mappingSource)
 		OnCreated
 	End Sub
 	

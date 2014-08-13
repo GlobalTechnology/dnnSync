@@ -1,5 +1,6 @@
 ﻿Imports GR_NET
 Imports System.Configuration
+
 Public Class SystemsStatus
     Shared Sub GetSystemsStatus(Optional ByVal Stage As Boolean = False)
 
@@ -12,11 +13,11 @@ Public Class SystemsStatus
             gr = New GR(ConfigurationManager.AppSettings("jon_test_api_key"), ConfigurationManager.AppSettings("gr_server"))
         End If
 
-       
+
 
 
         '  Dim ministries = gr.GetEntities("ministry", "&filters[owned_by]=all&filters[ministry_scope][]=National&filters[ministry_scope][]=Area&filters[ministry_scope][]=National Region", 0, 2000)
-        Dim ministries = gr.GetEntities("ministry", "&ruleset=global_minisries", 0, 2000)
+        Dim ministries = gr.GetEntities("ministry", "&ruleset=global_ministries", 0, 0)
         'ministries.AddRange(gr.GetEntities("ministry", "&filters[owned_by]=all&filters[ministry_scope]=Area", 0, 2000))
         'ministries.AddRange(gr.GetEntities("ministry", "&filters[owned_by]=all&filters[ministry_scope]=National Region", 0, 2000))
 
@@ -26,7 +27,7 @@ Public Class SystemsStatus
 
         Dim d As New AgapeConnectDataContext
         For Each min In ministries
-            Console.Write(min.GetPropertyValue("name"))
+            Module1.Log(min.GetPropertyValue("name"))
             Dim q = From c In d.ministry_systems Where c.min_code = min.GetPropertyValue("min_code")
             Dim area_id = min.GetPropertyValue("area:relationship.area")
             Dim area = From c In areas Where c.ID = area_id Select name = c.GetPropertyValue("area_name"), code = c.GetPropertyValue("area_code")
