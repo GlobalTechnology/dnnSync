@@ -37,8 +37,10 @@ Module Module1
     Const GR_ACC_INC_FOREIGN = "39f2fbda-0d9b-11e4-a72d-12543788cf06"
     Const GR_ACC_INC_LOC = "4575d5d6-0d9b-11e4-a61f-12543788cf06"
     Const GR_ACC_INC_SUB = "600e3e38-0d9b-11e4-b8c5-12543788cf06"
+
     Const GR_MPD_EXP = "88077c4c-0d9b-11e4-997d-12543788cf06"
     Const GR_MPD_GOAL = "b63003d2-0d9b-11e4-bcd4-12543788cf06"
+
 
     Const ExpenseBudget As Integer = 9
     Const ToRaiseBudget As Integer = 26
@@ -51,6 +53,9 @@ Module Module1
     Dim root_key = ""
     Dim stage As Boolean = False
     Dim excludeList As String() = {"id", "client_integration_id", "ministry", "authentication.key_guid", "authentication.client_integration_id"}
+
+    Dim staff_types As New Dictionary(Of String, String)
+
     Dim out_log As String = ""
 
     Sub Main(ByVal args As String())
@@ -81,18 +86,6 @@ Module Module1
         End If
 
 
-
-
-
-        'Dim gr As New GR("cd27e0f4767db1330c599b1377e608048987deddedf39984f7a552609f17", gr_server)
-
-
-        'Dim rel_ents = gr.GetEntities("ministry_membership", "", 0, 60, 0)
-        'For Each ent In rel_ents
-        '    gr.DeleteEntity(ent.ID)
-
-        'Next
-        'Return
 
 
         refresh = args.Contains("-refresh")
@@ -143,10 +136,15 @@ Module Module1
 
                 Log("Error Syncing Systems Status: " & ex.ToString)
             End Try
-
+            Try
+                GoogleDrive.SyncPartnerMinistryNumber(stage)
+            Catch ex As Exception
+                Log("Error Syncing Partner Ministry Total: " & ex.ToString)
+            End Try
         End If
         Log("finished at " & Now.ToString("yyyy-MM-dd hh:mm:ss"))
         WriteLog()
+        Console.ReadKey()
         Return
 
 
@@ -163,8 +161,8 @@ Module Module1
     End Sub
 
 
-    Private Sub SyncPeople(Optional ByVal PortalId As Integer = Nothing, Optional ByVal StaffId As Integer = nothing)
-        Dim apikeys = From c In d.AP_StaffBroker_Settings Where c.SettingName = "gr_api_key" And c.SettingValue <> ""   'JUST PORTALID 2 FOR NOW
+    Private Sub SyncPeople(Optional ByVal PortalId As Integer = Nothing, Optional ByVal StaffId As Integer = Nothing)
+        Dim apikeys = From c In d.AP_StaffBroker_Settings Where c.SettingName = "gr_api_key" And c.SettingValue <> "" And c.PortalId <> 2  'JUST PORTALID 2 FOR NOW
         If PortalId Then
             apikeys = apikeys.Where(Function(c) c.PortalId = PortalId)
         End If
@@ -243,6 +241,7 @@ Module Module1
 
 
 
+
                 '   PushMeasures(gr)
             End If
 
@@ -272,13 +271,69 @@ Module Module1
     Private Sub SyncMinisitries()
 
         Dim gr_min As New GR(root_key, gr_server)
-
+        Dim gr_back As New GR(root_key, "http://backend.global-registry.org/")
         'Get measureents
 
 
-        
+        'For Each the_country In d.AP_mpd_Countries
+
+
+
+        '    Dim admins = gr_back.GetEntities("person", "&filters[owned_by]=all&filters[ministry:relationship][id]=" & the_country.gr_ministry_id & "&filters[ministry:relationship:role]=Administrator")
+        '    admins.AddRange(gr_back.GetEntities("person", "&filters[owned_by]=all&filters[ministry:relationship][id]=" & the_country.gr_ministry_id & "&filters[ministry:relationship:role]=Finance Team"))
+        '    admins.AddRange(gr_back.GetEntities("person", "&filters[owned_by]=all&filters[ministry:relationship][id]=" & the_country.gr_ministry_id & "&filters[ministry:relationship:role]=MPD Admin"))
+        '    For Each admin In admins
+        '        Dim ssoGuid = admin.GetPropertyValue("authentication.key_guid")
+        '        If Not String.IsNullOrEmpty(ssoGuid) Then
+        '            Dim q = From c In the_country.AP_MPD_CountryAdmins Where c.sso_guid = ssoGuid And c.ministry_id = the_country.mpdCountryId
+        '            If q.Count = 0 Then
+        '                Dim insert As New AP_MPD_CountryAdmin
+        '                insert.ministry_id = the_country.mpdCountryId
+        '                insert.sso_guid = ssoGuid
+        '                d.AP_MPD_CountryAdmins.InsertOnSubmit(insert)
+        '                d.SubmitChanges()
+        '            End If
+        '        End If
+
+        '    Next
+        '    Dim toDelete = (From c In d.AP_MPD_CountryAdmins Where admins.Where(Function(b) b.GetPropertyValue("authentication.key_guid") = c.sso_guid).Count = 0)
+        '    For Each row In d.AP_MPD_CountryAdmins.Where(Function(c) c.ministry_id = the_country.mpdCountryId)
+        '        If (From c In admins Where c.GetPropertyValue("authentication.key_guid") = row.sso_guid).Count = 0 Then
+        '            d.AP_MPD_CountryAdmins.DeleteOnSubmit(row)
+        '        End If
+
+
+        '    Next
+        '    d.SubmitChanges()
+
+
+        'Next
+
+
+
+
+
         'Get Summary finance Data
 
+
+        If refresh Then
+            Log("refreshing user details")
+            For Each person In d.Ap_mpd_Users
+                Console.Write(".")
+                Dim min_mem = gr_min.GetEntity(person.gr_min_membership_id)
+                Dim p = gr_min.GetEntity(min_mem.GetPropertyValue("person.id"))
+
+
+                person.Name = p.GetPropertyValue("last_name") & ", " & p.GetPropertyValue("first_name")
+                person.Email = p.GetPropertyValue("email_address.email")
+                person.Key_GUID = p.GetPropertyValue("authentication.key_guid")
+                person.membership_type = min_mem.GetPropertyValue("membership_type")
+                person.isNationalStaff = person.membership_type.Contains("National Staff")
+              
+
+            Next
+            d.SubmitChanges()
+        End If
 
 
 
@@ -304,6 +359,8 @@ Module Module1
 
             'combine and group by RID
             'for each RID
+
+
             For Each person In (From c In allMeasurements Group By c.RelatedEntityId Into Group)
                 Console.Write(".")
                 ''''Lookup person in database. 
@@ -346,39 +403,53 @@ Module Module1
 
                     d.Ap_mpd_Users.InsertOnSubmit(dbUser)
                     d.SubmitChanges()
+                    'Else
+
+                    '    Dim min_mem = gr_min.GetEntity(person.RelatedEntityId)
+                    '    Dim p = gr_min.GetEntity(min_mem.GetPropertyValue("person.id"))
+                    '    dbUser.Key_GUID = p.GetPropertyValue("authentication.key_guid")
+                    '    d.SubmitChanges()
+            
+
                 End If
                 'update measurements
-
                 Dim q = From c In d.AP_mpd_UserAccountInfos Where c.mpdUserId = dbUser.AP_mpd_UserId And c.period = Today.AddMonths(i).ToString("yyyy-MM")
-                If q.Count > 0 Then
-                    q.First.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Sum(Function(c) c.Value)
-                    q.First.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Sum(Function(c) c.Value)
-                    q.First.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Sum(Function(c) c.Value)
-                    q.First.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Sum(Function(c) c.Value)
-                    q.First.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Sum(Function(c) c.Value)
-
-
-                    q.First.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Sum(Function(c) c.Value)
-                    q.First.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Sum(Function(c) c.Value)
+                If dbUser.isNationalStaff Then
 
 
 
+                    If q.Count > 0 Then
+                        q.First.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Sum(Function(c) c.Value)
+                        q.First.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Sum(Function(c) c.Value)
+                        q.First.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Sum(Function(c) c.Value)
+                        q.First.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Sum(Function(c) c.Value)
+                        q.First.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Sum(Function(c) c.Value)
+
+
+                        q.First.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Sum(Function(c) c.Value)
+                        q.First.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Sum(Function(c) c.Value)
+
+
+
+                    Else
+                        Dim insertM As New AP_mpd_UserAccountInfo
+                        insertM.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Sum(Function(c) c.Value)
+                        insertM.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Sum(Function(c) c.Value)
+                        insertM.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Sum(Function(c) c.Value)
+                        insertM.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Sum(Function(c) c.Value)
+                        insertM.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Sum(Function(c) c.Value)
+                        insertM.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Sum(Function(c) c.Value)
+                        insertM.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Sum(Function(c) c.Value)
+                        insertM.period = Today.AddMonths(i).ToString("yyyy-MM")
+                        insertM.mpdUserId = dbUser.AP_mpd_UserId
+                        insertM.mpdCountryId = dbUser.mpdCountryId
+                        d.AP_mpd_UserAccountInfos.InsertOnSubmit(insertM)
+
+                    End If
                 Else
-                    Dim insertM As New AP_mpd_UserAccountInfo
-                    insertM.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Sum(Function(c) c.Value)
-                    insertM.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Sum(Function(c) c.Value)
-                    insertM.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Sum(Function(c) c.Value)
-                    insertM.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Sum(Function(c) c.Value)
-                    insertM.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Sum(Function(c) c.Value)
-                    insertM.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Sum(Function(c) c.Value)
-                    insertM.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Sum(Function(c) c.Value)
-                    insertM.period = Today.AddMonths(i).ToString("yyyy-MM")
-                    insertM.mpdUserId = dbUser.AP_mpd_UserId
-                    insertM.mpdCountryId = dbUser.mpdCountryId
-                    d.AP_mpd_UserAccountInfos.InsertOnSubmit(insertM)
 
+                    d.AP_mpd_UserAccountInfos.DeleteAllOnSubmit(q)
                 End If
-
 
 
 
@@ -387,15 +458,16 @@ Module Module1
 
 
             Next
+            d.SubmitChanges()
         Next
-        d.SubmitChanges()
+
         Log("Calculating person summaries")
-        For Each dbUser In d.Ap_mpd_Users
+        For Each dbUser In d.Ap_mpd_Users.Where(Function(c) c.isNationalStaff)
             Console.Write(".")
             Dim userAvg = (From c In d.AP_mpd_UserAccountInfos Where c.mpdUserId = dbUser.AP_mpd_UserId And Not (c.expense = 0 And c.income = 0) Order By c.period Descending).Take(13)
 
             If userAvg.Count > 1 Then
-                'ignore the last!
+                'ignore the last!       
                 userAvg = userAvg.OrderBy(Function(c) c.period).Take(userAvg.Count - 1)
             End If
 
@@ -411,9 +483,19 @@ Module Module1
                 dbUser.AvgIncome3 = (From c In userAvg.Take(3) Select (c.income + c.foreignIncome)).Average
                 dbUser.AvgIncome1 = (From c In userAvg.Take(1) Select (c.income + c.foreignIncome)).Average
                 If dbUser.AvgMPDBudget12 > 0 Then
-                    dbUser.AvgSupLevel12 = (From c In userAvg Where c.toRaiseBudget > 0 Select (c.income + c.foreignIncome) / c.toRaiseBudget).Average()
-                    dbUser.AvgSupLevel3 = (From c In userAvg.Take(3) Where c.toRaiseBudget > 0 Select (c.income + c.foreignIncome) / c.toRaiseBudget).Average
-                    dbUser.AvgSupLevel1 = (From c In userAvg Where c.toRaiseBudget > 0 And c.income + c.foreignIncome > 0).Select(Function(c) (c.income + c.foreignIncome) / c.toRaiseBudget).FirstOrDefault
+                    Dim AvSup = userAvg.Where(Function(c) c.toRaiseBudget > 0 And c.income + c.foreignIncome > 0).ToList
+
+                    Try
+
+
+                        dbUser.AvgSupLevel12 = (From c In AvSup Select (c.income + c.foreignIncome) / c.toRaiseBudget).Average()
+                        dbUser.AvgSupLevel3 = (From c In AvSup Select (c.income + c.foreignIncome) / c.toRaiseBudget).Average
+                        dbUser.AvgSupLevel1 = (From c In AvSup Where c.income + c.foreignIncome > 0).Select(Function(c) (c.income + c.foreignIncome) / c.toRaiseBudget).FirstOrDefault
+                    Catch ex As Exception
+                        dbUser.AvgSupLevel12 = 0
+                        dbUser.AvgSupLevel3 = 0
+                        dbUser.AvgSupLevel1 = 0
+                    End Try
                     dbUser.EstSupLevel12 = (From c In userAvg Select (c.income + c.foreignIncome)).Average() / (dbUser.AvgExpenses * -1.1)
                     dbUser.EstSupLevel3 = (From c In userAvg.Take(3) Select (c.income + c.foreignIncome)).Average / (dbUser.AvgExpenses * -1.1)
                     dbUser.EstSupLevel1 = (From c In userAvg Where c.income + c.foreignIncome > 0).Select(Function(c) (c.income + c.foreignIncome)).FirstOrDefault / (dbUser.AvgExpenses * -1.1)
@@ -476,51 +558,51 @@ Module Module1
                 the_country.portalId = (From c In d.AP_StaffBroker_Settings Where c.SettingName = "gr_ministry_id" And c.SettingValue = the_country.gr_ministry_id Select c.PortalId).FirstOrDefault()
             End If
 
-            Dim countryAvg = From c In the_country.Ap_mpd_Users Where c.mpdCountryId = the_country.mpdCountryId
-
+            '  Dim countryAvg = From c In the_country.Ap_mpd_Users Where c.mpdCountryId = the_country.mpdCountryId
+            Dim countryUsers = From c In the_country.Ap_mpd_Users Where c.isNationalStaff
             the_country.lastUpdated = Now
 
-            the_country.VeryLowCount = (From c In the_country.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 < 0.5).Count
-            the_country.LowCount = (From c In the_country.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 0.5 And c.AvgSupLevel12 < 0.8).Count
-            the_country.HighCount = (From c In the_country.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 0.8 And c.AvgSupLevel12 < 1.0).Count
-            the_country.FullCount = (From c In the_country.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 1.0).Count
+            the_country.VeryLowCount = (From c In countryUsers Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 < 0.5).Count
+            the_country.LowCount = (From c In countryUsers Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 0.5 And c.AvgSupLevel12 < 0.8).Count
+            the_country.HighCount = (From c In countryUsers Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 0.8 And c.AvgSupLevel12 < 1.0).Count
+            the_country.FullCount = (From c In countryUsers Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 1.0).Count
 
 
-            the_country.EstVeryLowCount = (From c In the_country.Ap_mpd_Users Where c.EstSupLevel12 < 0.5).Count
-            the_country.EstLowCount = (From c In the_country.Ap_mpd_Users Where c.EstSupLevel12 >= 0.5 And c.EstSupLevel12 < 0.8).Count
-            the_country.EstHighCount = (From c In the_country.Ap_mpd_Users Where c.EstSupLevel12 >= 0.8 And c.EstSupLevel12 < 1.0).Count
-            the_country.EstFullCount = (From c In the_country.Ap_mpd_Users Where c.EstSupLevel12 >= 1.0).Count
+            the_country.EstVeryLowCount = (From c In countryUsers Where c.EstSupLevel12 < 0.5).Count
+            the_country.EstLowCount = (From c In countryUsers Where c.EstSupLevel12 >= 0.5 And c.EstSupLevel12 < 0.8).Count
+            the_country.EstHighCount = (From c In countryUsers Where c.EstSupLevel12 >= 0.8 And c.EstSupLevel12 < 1.0).Count
+            the_country.EstFullCount = (From c In countryUsers Where c.EstSupLevel12 >= 1.0).Count
 
 
-            If (countryAvg.Count > 0) Then
+            If (countryUsers.Count > 0) Then
 
-                Dim total_avg_income = countryAvg.Sum(Function(c) c.AvgIncome)
+                Dim total_avg_income = countryUsers.Sum(Function(c) c.AvgIncome)
                 If total_avg_income > 0 Then
 
 
-                    the_country.SplitLocal = countryAvg.Sum(Function(c) c.LocalIncome12) / total_avg_income
-                    the_country.SplitForeign = countryAvg.Sum(Function(c) c.ForeignIncome12) / total_avg_income
-                    the_country.SplitSubsidy = countryAvg.Sum(Function(c) c.SubsidyIncome12) / total_avg_income
+                    the_country.SplitLocal = countryUsers.Sum(Function(c) c.LocalIncome12) / total_avg_income
+                    the_country.SplitForeign = countryUsers.Sum(Function(c) c.ForeignIncome12) / total_avg_income
+                    the_country.SplitSubsidy = countryUsers.Sum(Function(c) c.SubsidyIncome12) / total_avg_income
                 Else
                     the_country.SplitLocal = 1
                     the_country.SplitForeign = 0
                     the_country.SplitSubsidy = 0
                 End If
-                the_country.NoBudgetCount = countryAvg.Count(Function(c) c.AvgExpenseBudget12 = 0)
-                If (countryAvg.Where(Function(c) c.AvgExpenseBudget12 > 0)).Count > 0 Then
-                    the_country.BudgetAccuracy = countryAvg.Where(Function(c) c.AvgExpenseBudget12 > 0).Average(Function(c) c.AvgExpenses / c.AvgExpenseBudget12)
+                the_country.NoBudgetCount = countryUsers.Where(Function(c) c.AvgExpenseBudget12 = 0).Count
+                If (countryUsers.Where(Function(c) c.AvgExpenseBudget12 > 0)).Count > 0 Then
+                    the_country.BudgetAccuracy = countryUsers.Where(Function(c) c.AvgExpenseBudget12 > 0 And c.AvgExpenses <> 0).Average(Function(c) -c.AvgExpenses / c.AvgExpenseBudget12)
                 Else
 
                     the_country.BudgetAccuracy = 1
                 End If
 
-                the_country.AvgSupport12 = countryAvg.Average(Function(c) c.AvgSupLevel12)
-                the_country.AvgSupport3 = countryAvg.Average(Function(c) c.AvgSupLevel3)
-                the_country.AvgSupport1 = countryAvg.Average(Function(c) c.AvgSupLevel1)
+                the_country.AvgSupport12 = countryUsers.Average(Function(c) c.AvgSupLevel12)
+                the_country.AvgSupport3 = countryUsers.Average(Function(c) c.AvgSupLevel3)
+                the_country.AvgSupport1 = countryUsers.Average(Function(c) c.AvgSupLevel1)
 
-                the_country.EstAvgSupport12 = countryAvg.Average(Function(c) c.EstSupLevel12)
-                the_country.EstAvgSupport3 = countryAvg.Average(Function(c) c.EstSupLevel3)
-                the_country.EstAvgSupport1 = countryAvg.Average(Function(c) c.EstSupLevel1)
+                the_country.EstAvgSupport12 = countryUsers.Average(Function(c) c.EstSupLevel12)
+                the_country.EstAvgSupport3 = countryUsers.Average(Function(c) c.EstSupLevel3)
+                the_country.EstAvgSupport1 = countryUsers.Average(Function(c) c.EstSupLevel1)
 
 
             Else
@@ -539,259 +621,54 @@ Module Module1
                 the_country.EstAvgSupport1 = 0
             End If
             d.SubmitChanges()
+
+
+
+            Dim admins = gr_back.GetEntities("person", "&filters[owned_by]=all&filters[ministry:relationship][id]=" & the_country.gr_ministry_id & "&filters[ministry:relationship:role]=Administrator")
+            admins.AddRange(gr_back.GetEntities("person", "&filters[owned_by]=all&filters[ministry:relationship][id]=" & the_country.gr_ministry_id & "&filters[ministry:relationship:role]=Finance Team"))
+            admins.AddRange(gr_back.GetEntities("person", "&filters[owned_by]=all&filters[ministry:relationship][id]=" & the_country.gr_ministry_id & "&filters[ministry:relationship:role]=MPD Admin"))
+            For Each admin In admins
+                Dim ssoGuid = admin.GetPropertyValue("authentication.key_guid")
+                If Not String.IsNullOrEmpty(ssoGuid) Then
+                    Dim q = From c In the_country.AP_MPD_CountryAdmins Where c.sso_guid = ssoGuid And c.ministry_id = the_country.mpdCountryId
+                    If q.Count = 0 Then
+                        Dim insert As New AP_MPD_CountryAdmin
+                        insert.ministry_id = the_country.mpdCountryId
+                        insert.sso_guid = ssoGuid
+                        d.AP_MPD_CountryAdmins.InsertOnSubmit(insert)
+                        d.SubmitChanges()
+                    End If
+                End If
+
+            Next
+            Dim toDelete = (From c In d.AP_MPD_CountryAdmins Where admins.Where(Function(b) b.GetPropertyValue("authentication.key_guid") = c.sso_guid).Count = 0)
+            For Each row In d.AP_MPD_CountryAdmins.Where(Function(c) c.ministry_id = the_country.mpdCountryId)
+                If (From c In admins Where c.GetPropertyValue("authentication.key_guid") = row.sso_guid).Count = 0 Then
+                    d.AP_MPD_CountryAdmins.DeleteOnSubmit(row)
+                End If
+
+
+            Next
+            d.SubmitChanges()
+
+
+
+
+
+
+
+
         Next
 
 
 
 
+
+
+
+
+
         Return
-
-        ''Sync Ministries
-
-        'Dim ministries = gr_min.GetEntities("ministry", "&ruleset=global_ministries", Nothing, Nothing)
-
-        'For Each min In ministries 'Iterate through all ministries
-        '    'Find the Country
-        '    Dim the_country As AP_mpd_Country
-        '    Dim q = From c In d.AP_mpd_Countries Where c.gr_ministry_id = min.ID
-        '    WriteLog("Syncing " & min.GetPropertyValue("name"))
-        '    If q.Count > 0 Then
-        '        the_country = q.First
-        '        the_country.name = min.GetPropertyValue("name")
-        '        the_country.isoCode = min.GetPropertyValue("country_iso2")
-
-        '    Else
-        '        the_country = New AP_mpd_Country
-        '        the_country.name = min.GetPropertyValue("name")
-        '        the_country.isoCode = min.GetPropertyValue("country_iso2")
-        '        the_country.gr_ministry_id = min.ID
-        '        d.AP_mpd_Countries.InsertOnSubmit(the_country)
-        '        d.SubmitChanges()
-
-        '    End If
-
-        '    Dim sys_min = From c In d.ministry_systems Where c.gr_ministry_id = min.ID
-
-        '    If sys_min.Count > 0 Then
-        '        sys_min.First.gr_ministry_id = min.ID
-        '        sys_min.First.min_code = min.GetPropertyValue("min_code")
-        '        sys_min.First.iso2_code = the_country.isoCode
-        '        sys_min.First.min_name = the_country.name
-        '        sys_min.First.min_logo = min.GetPropertyValue("logo_url")
-        '        If Not min.GetPropertyValue("last_dataserver_donation") = "" Then
-        '            sys_min.First.last_dataserver_donation = min.GetPropertyValue("last_dataserver_donation")
-        '        End If
-        '        If Not min.GetPropertyValue("last_financial_report") = "" Then
-        '            sys_min.First.last_fin_rep = min.GetPropertyValue("last_financial_report")
-        '        End If
-        '        If Not min.GetPropertyValue("last_ministry_status") = "" Then
-        '            sys_min.First.gma_status = min.GetPropertyValue("last_ministry_status")
-        '        End If
-        '    Else
-        '        Dim insert As New ministry_system
-        '        insert.iso2_code = the_country.isoCode
-        '        insert.min_code = min.GetPropertyValue("min_code")
-        '        insert.min_name = the_country.name
-        '        insert.min_logo = min.GetPropertyValue("logo_url")
-        '        If Not min.GetPropertyValue("last_dataserver_donation") = "" Then
-        '            insert.last_dataserver_donation = min.GetPropertyValue("last_dataserver_donation")
-        '        End If
-        '        If Not min.GetPropertyValue("last_financial_report") = "" Then
-        '            insert.last_fin_rep = min.GetPropertyValue("last_financial_report")
-        '        End If
-        '        If Not min.GetPropertyValue("last_ministry_status") = "" Then
-        '            insert.gma_status = min.GetPropertyValue("last_ministry_status")
-        '        End If
-
-        '        d.ministry_systems.InsertOnSubmit(insert)
-        '    End If
-        '    d.SubmitChanges()
-
-
-
-
-
-
-
-
-
-
-        '    If False Then
-
-
-
-        '        'get Staff
-        '        Dim person = gr_min.GetEntities("person", "&filters[ministry:relationship]=" & min.ID & "&filters[owned_by]=all")
-        '        For Each p In person
-        '            'check if we already have a record
-        '            Dim thisPerson As New Ap_mpd_User
-        '            Dim checkP = From c In the_country.Ap_mpd_Users Where c.gr_person_id = p.ID
-        '            If checkP.Count > 0 Then
-        '                thisPerson = checkP.First
-        '                thisPerson.Name = p.GetPropertyValue("last_name.value") & ", " & p.GetPropertyValue("first_name.value")
-        '                thisPerson.Email = p.GetPropertyValue("email.value")
-        '                thisPerson.Key_GUID = p.GetPropertyValue("authentication.key_guid.value")
-
-        '            Else
-        '                thisPerson = New Ap_mpd_User
-        '                thisPerson.Name = p.GetPropertyValue("last_name.value") & ", " & p.GetPropertyValue("first_name.value")
-        '                thisPerson.Email = p.GetPropertyValue("email.value")
-        '                thisPerson.Key_GUID = p.GetPropertyValue("authentication.key_guid.value")
-        '                thisPerson.mpdCountryId = the_country.mpdCountryId
-        '                thisPerson.gr_person_id = p.ID
-
-        '                d.Ap_mpd_Users.InsertOnSubmit(thisPerson)
-        '                d.SubmitChanges()
-        '            End If
-
-        '            'Get Measurements for this person
-
-        '            Dim fin_measures = gr_min.GetMeasurements(p.ID, Today.AddMonths(-13).ToString("yyyy-MM"), Today.ToString("yyyy-MM"), "", "Finance") ' need to specify Finance as Category, when implements
-        '            Dim mpd_measures = gr_min.GetMeasurements(p.ID, Today.AddMonths(-13).ToString("yyyy-MM"), Today.ToString("yyyy-MM"), "", "MPD") ' need to specify MPD as Category, when implements
-
-        '            For i As Integer = 0 To 13
-        '                Dim thisMonth As AP_mpd_UserAccountInfo
-        '                Dim checkDetail = From c In thisPerson.AP_mpd_UserAccountInfos Where c.period = Today.AddMonths(-i).ToString("yyyyMM")
-
-        '                If checkDetail.Count > 0 Then
-        '                    thisMonth = checkDetail.First
-        '                Else
-        '                    thisMonth = New AP_mpd_UserAccountInfo
-        '                    thisMonth.mpdCountryId = the_country.mpdCountryId
-        '                    thisMonth.mpdUserId = thisPerson.AP_mpd_UserId
-        '                    thisMonth.period = Today.AddMonths(-i).ToString("yyyyMM")
-
-        '                End If
-
-        '                thisMonth.balance = GetValueFromMeasurementType(StaffBal, Today.AddMonths(-i).ToString("yyyy-MM"), fin_measures)
-        '                thisMonth.income = GetValueFromMeasurementType(StaffIncLoc, Today.AddMonths(-i).ToString("yyyy-MM"), fin_measures)
-        '                thisMonth.foreignIncome = GetValueFromMeasurementType(StaffIncFor, Today.AddMonths(-i).ToString("yyyy-MM"), fin_measures)
-        '                thisMonth.compensation = GetValueFromMeasurementType(StaffIncSub, Today.AddMonths(-i).ToString("yyyy-MM"), fin_measures)
-        '                thisMonth.expense = GetValueFromMeasurementType(StaffExp, Today.AddMonths(-i).ToString("yyyy-MM"), fin_measures)
-        '                thisMonth.expBudget = GetValueFromMeasurementType(ExpenseBudget, Today.AddMonths(-i).ToString("yyyy-MM"), mpd_measures)
-        '                thisMonth.toRaiseBudget = GetValueFromMeasurementType(ToRaiseBudget, Today.AddMonths(-i).ToString("yyyy-MM"), mpd_measures)
-
-        '                If checkDetail.Count = 0 Then
-        '                    d.AP_mpd_UserAccountInfos.InsertOnSubmit(thisMonth)
-        '                End If
-
-
-
-        '            Next
-        '            'Update the User Specs
-        '            d.SubmitChanges()
-        '            Dim userAvg = (From c In d.AP_mpd_UserAccountInfos Where c.mpdUserId = thisPerson.AP_mpd_UserId And Not (c.balance = 0 And c.expense = 0 And c.income = 0) Order By c.period Descending).Take(12)
-        '            If userAvg.Count > 0 Then
-        '                thisPerson.AvgExpenses = userAvg.Average(Function(c) c.expense)
-
-        '                thisPerson.AvgExpenseBudget12 = userAvg.Average(Function(c) c.expBudget)
-        '                thisPerson.AvgMPDBudget12 = userAvg.Average(Function(c) c.toRaiseBudget)
-
-
-
-        '                thisPerson.AvgIncome12 = (From c In userAvg Select (c.income + c.foreignIncome)).Average
-        '                thisPerson.AvgIncome3 = (From c In userAvg.Take(3) Select (c.income + c.foreignIncome)).Average
-        '                thisPerson.AvgIncome1 = (From c In userAvg.Take(1) Select (c.income + c.foreignIncome)).Average
-        '                If thisPerson.AvgMPDBudget12 > 0 Then
-        '                    thisPerson.AvgSupLevel12 = (From c In userAvg Where c.toRaiseBudget > 0 Select (c.income + c.foreignIncome) / c.toRaiseBudget).Average()
-        '                    thisPerson.AvgSupLevel3 = (From c In userAvg.Take(3) Where c.toRaiseBudget > 0 Select (c.income + c.foreignIncome) / c.toRaiseBudget).Average
-        '                    thisPerson.AvgSupLevel1 = (From c In userAvg Where c.toRaiseBudget > 0 And c.income + c.foreignIncome > 0).Select(Function(c) (c.income + c.foreignIncome) / c.toRaiseBudget).FirstOrDefault
-        '                Else
-        '                    thisPerson.AvgSupLevel12 = 1
-        '                    thisPerson.AvgSupLevel3 = 1
-        '                    thisPerson.AvgSupLevel1 = 1
-        '                End If
-
-        '                thisPerson.ForeignIncome12 = userAvg.Average(Function(c) c.foreignIncome)
-        '                thisPerson.LocalIncome12 = userAvg.Average(Function(c) c.income)
-        '                thisPerson.SubsidyIncome12 = userAvg.Average(Function(c) c.compensation)
-
-        '                thisPerson.AvgIncome = thisPerson.ForeignIncome12 + thisPerson.LocalIncome12 + thisPerson.SubsidyIncome12
-        '                If thisPerson.AvgIncome > 0 Then
-        '                    thisPerson.SplitLocal = userAvg.Average(Function(c) c.income) / thisPerson.AvgIncome
-        '                    thisPerson.SplitForeign = userAvg.Average(Function(c) c.foreignIncome) / thisPerson.AvgIncome
-        '                    thisPerson.SplitSubsidy = userAvg.Average(Function(c) c.compensation) / thisPerson.AvgIncome
-        '                Else
-        '                    thisPerson.SplitLocal = 1
-        '                    thisPerson.SplitForeign = 0
-        '                    thisPerson.SplitSubsidy = 0
-        '                End If
-
-        '            Else
-        '                thisPerson.AvgExpenses = 0
-        '                thisPerson.AvgExpenseBudget12 = 0
-        '                thisPerson.AvgMPDBudget12 = 0
-        '                thisPerson.SplitLocal = 1
-        '                thisPerson.SplitForeign = 0
-        '                thisPerson.SplitSubsidy = 0
-        '                thisPerson.AvgSupLevel12 = 1
-        '                thisPerson.AvgSupLevel3 = 1
-        '                thisPerson.AvgSupLevel1 = 1
-        '                thisPerson.AvgIncome12 = 0
-        '                thisPerson.AvgIncome3 = 0
-        '                thisPerson.AvgIncome1 = 0
-        '                thisPerson.ForeignIncome12 = 0
-        '                thisPerson.LocalIncome12 = 0
-        '                thisPerson.SubsidyIncome12 = 0
-
-        '            End If
-
-
-
-
-        '        Next
-        '        d.SubmitChanges()
-
-        '        Dim countryAvg = From c In d.Ap_mpd_Users Where c.mpdCountryId = the_country.mpdCountryId
-
-        '        the_country.VeryLowCount = (From c In d.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 < 0.5).Count
-        '        the_country.LowCount = (From c In d.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 0.5 And c.AvgSupLevel12 < 0.8).Count
-        '        the_country.HighCount = (From c In d.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 0.8 And c.AvgSupLevel12 < 1.0).Count
-        '        the_country.FullCount = (From c In d.Ap_mpd_Users Where c.AvgExpenseBudget12 > 0 And c.AvgSupLevel12 >= 1.0).Count
-        '        If (countryAvg.Count > 0) Then
-
-        '            Dim total_avg_income = countryAvg.Sum(Function(c) c.AvgIncome)
-        '            the_country.SplitLocal = countryAvg.Sum(Function(c) c.LocalIncome12) / total_avg_income
-        '            the_country.SplitForeign = countryAvg.Sum(Function(c) c.ForeignIncome12) / total_avg_income
-        '            the_country.SplitSubsidy = countryAvg.Sum(Function(c) c.SubsidyIncome12) / total_avg_income
-
-        '            the_country.NoBudgetCount = countryAvg.Count(Function(c) c.AvgExpenseBudget12 = 0)
-
-        '            the_country.BudgetAccuracy = countryAvg.Where(Function(c) c.AvgExpenseBudget12 > 0).Average(Function(c) c.AvgExpenses / c.AvgExpenseBudget12)
-
-        '            the_country.AvgSupport12 = countryAvg.Average(Function(c) c.AvgSupLevel12)
-        '            the_country.AvgSupport3 = countryAvg.Average(Function(c) c.AvgSupLevel3)
-        '            the_country.AvgSupport1 = countryAvg.Average(Function(c) c.AvgSupLevel1)
-
-
-        '        Else
-        '            the_country.SplitLocal = 1
-        '            the_country.SplitForeign = 0
-        '            the_country.SplitSubsidy = 0
-
-        '            the_country.NoBudgetCount = 0
-
-        '            the_country.BudgetAccuracy = 1
-        '            the_country.AvgSupport12 = 0
-        '            the_country.AvgSupport3 = 0
-        '            the_country.AvgSupport1 = 0
-        '        End If
-
-
-
-
-
-        '    End If
-
-        '    'update the country stats
-
-
-
-
-
-        'Next
-
-        'd.SubmitChanges()
 
 
 
@@ -833,13 +710,22 @@ Module Module1
         Dim emailRegEx As New Regex("(\S+)@([^\.\s]+)(?:\.([^\.\s]+))+")
 
         Return emailRegEx.IsMatch(emailString)
-        
+
     End Function
 
+    Private Sub SetupDicts()
+        staff_types.Clear()
+        staff_types.Add("National Staff", "National Staff")
+        staff_types.Add("National Staff, Overseas", "National Staff Overseas")
+        staff_types.Add("Overseas Staff, in Country", "Overseas Staff In Country")
+        staff_types.Add("Overseas Staff, Overseas", "Overseas Staff Overseas")
+        staff_types.Add("Centrally Funded", "Centrally Funded")
+        staff_types.Add("Ex-Staff", "Ex-Staff")
 
+    End Sub
     Private Function syncPerson(ByVal s As AP_StaffBroker_Staff, ByVal u As User, ByVal Portalid As Integer, ByRef gr As GR, ByVal ministry_id As String) As String
         Dim has_data As Boolean = False
-
+        SetupDicts()
         'Log("Sync " & u.DisplayName)
         Dim p = gr.People.createPerson(u.UserID)
         Dim gr_id = GetProfileProperty(u.UserProfiles, "gr_person_id", Nothing)
@@ -855,15 +741,39 @@ Module Module1
 
 
         End If
-
+        Dim isAdmin = u.UserRoles.Where(Function(c) c.Role.RoleName = "Administrators").Count > 0
+        Dim isFinance = u.UserRoles.Where(Function(c) c.Role.RoleName = "Accounts Team").Count > 0
+        Dim isMPD = u.UserRoles.Where(Function(c) c.Role.RoleName = "MPD Admin").Count > 0
         p.ID = gr_id
         p.AddPropertyValue("ministry:relationship.ministry", ministry_id)
         p.AddPropertyValue("ministry:relationship.client_integration_id", u.UserID & "_" & Portalid)
-        p.AddPropertyValue("authentication.key_guid", GetUserProperty("ssoGUID", u, Nothing))
-        p.AddPropertyValue("authentication.client_integration_id", GetUserProperty("ssoGUID", u, Nothing))
+        Dim i As Integer = 0
+        If isAdmin Then
+            p.AddPropertyValue("ministry:relationship.role[" & i & "]", "Administrator")
+            i += 1
+        End If
+        If isFinance Then
+            p.AddPropertyValue("ministry:relationship.role[" & i & "]", "Finance Team")
+            i += 1
+        End If
+        If isMPD Then
+            p.AddPropertyValue("ministry:relationship.role[" & i & "]", "MPD Admin")
+            i += 1
+        End If
+        If (staff_types.ContainsKey(s.AP_StaffBroker_StaffType.Name)) Then
+            p.AddPropertyValue("ministry:relationship.membership_type", staff_types(s.AP_StaffBroker_StaffType.Name))
+
+        End If
+
+
+        If (u.UserProfiles.Where(Function(c) c.ProfilePropertyDefinition.PropertyName = "ssoGUID").Count > 0) Then
+            p.AddPropertyValue("authentication.key_guid", GetProfileProperty(u.UserProfiles, "ssoGUID", Nothing))
+            p.AddPropertyValue("authentication.client_integration_id", GetProfileProperty(u.UserProfiles, "ssoGUID", Nothing))
+        End If
+
         If refresh Then
             sinceDate = Nothing
-       
+
 
         End If
 
@@ -892,7 +802,7 @@ Module Module1
             p.AddPropertyValue(link.gr_dot_notated_name.Replace("person.", "").Replace("person:{in_this_min}", "ministry:relationship"), Transform(link.FieldType, link.replace, GetStaffProfileProperty(s.AP_StaffBroker_StaffProfiles, link.LocalName, sinceDate)))
         Next
         'WriteLog("Push " & u.DisplayName)
-       
+
 
 
         If p.profileProperties.Keys.Where(Function(c) Not excludeList.Contains(c)).Count = 0 Then
