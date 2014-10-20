@@ -3,8 +3,76 @@ Imports Google.GData.Spreadsheets
 Imports GR_NET
 Imports System.Configuration
 Public Class GoogleDrive
+
+    Shared Sub SyncPartnerMinistryNumber(Optional ByVal Stage As Boolean = False)
+        Dim gr As GR
+        Dim all_id = ""
+        If Stage Then
+
+            gr = New GR(ConfigurationManager.AppSettings("gma_status_stage_key"), ConfigurationManager.AppSettings("gr_stage_server"))
+            all_id = "f77d403a-f085-11e3-af10-12725f8f377c"
+
+
+
+        Else
+            all_id = "99800eb2-f89c-11e3-b90f-12543788cf06"
+
+            gr = New GR(ConfigurationManager.AppSettings("gma_status_api_key"), ConfigurationManager.AppSettings("gr_server"))
+        End If
+
+
+        Dim service As New SpreadsheetsService("MySpreadsheetIntegration-v1")
+        service.setUserCredentials(ConfigurationManager.AppSettings("google_username"), ConfigurationManager.AppSettings("google_password"))
+
+        Dim query As New SpreadsheetQuery(ConfigurationManager.AppSettings("google_query_md"))
+
+
+        Dim feed As SpreadsheetFeed = service.Query(query)
+
+
+        '  Dim all = gr.GetEntity("all_id")
+
+
+        ' TODO: There were no spreadsheets, act accordingly.
+        If feed.Entries.Count = 1 Then
+
+
+            Dim spreadsheet As SpreadsheetEntry = DirectCast(feed.Entries(0), SpreadsheetEntry)
+            Dim wsFeed As WorksheetFeed = spreadsheet.Worksheets
+            Dim worksheet As WorksheetEntry = DirectCast(wsFeed.Entries(1), WorksheetEntry)
+            Dim listFeedLink As AtomLink = worksheet.Links.FindService(GDataSpreadsheetsNameTable.ListRel, Nothing)
+            Dim listQuery As ListQuery = New ListQuery(listFeedLink.HRef.ToString())
+
+            Dim cellQuery = New CellQuery(worksheet.CellFeedLink)
+
+            cellQuery.MinimumRow = 32
+            cellQuery.MaximumRow = 32
+
+
+
+            Dim cellFeed = service.Query(cellQuery)
+            Try
+                Dim theAnswer As Integer = getCellEntry(cellFeed.Entries, "H32").Trim(" ").Replace(",", "")
+
+                Dim update As New Entity
+                update.ID = all_id
+                update.AddPropertyValue("client_integration_id", "ALL")
+                update.AddPropertyValue("partner_md_total", theAnswer)
+                gr.UpdateEntity(update, "global_mcc")
+
+
+            Catch ex As Exception
+                Console.WriteLine("could not sync Partner Total from Multiplying Disciples")
+            End Try
+
+
+        End If
+
+
+    End Sub
+
     Shared Sub SyncValues(Optional ByVal Stage As Boolean = False)
-     
+
         Dim gr As GR
         If Stage Then
 
@@ -13,7 +81,7 @@ Public Class GoogleDrive
             gr = New GR(ConfigurationManager.AppSettings("gma_status_api_key"), ConfigurationManager.AppSettings("gr_server"))
         End If
 
-        
+
         Dim service As New SpreadsheetsService("MySpreadsheetIntegration-v1")
         service.setUserCredentials(ConfigurationManager.AppSettings("google_username"), ConfigurationManager.AppSettings("google_password"))
         Dim query As New SpreadsheetQuery(ConfigurationManager.AppSettings("google_query_gma"))
@@ -178,7 +246,7 @@ Public Class GoogleDrive
 
 
 
-                            
+
 
                     End If
                 End If
