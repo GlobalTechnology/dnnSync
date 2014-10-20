@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?><Database Name="dnn_dev" Class="AgapeConnectDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="agapeconnect-2014-4-12-18-15" Class="AgapeConnectDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
   <Connection Mode="AppSettings" ConnectionString="Data Source=tcp:lhyw8k0s0l.database.windows.net,1433;Initial Catalog=agapeconnect-2014-4-12-18-15;User ID=agapeconnect@lhyw8k0s0l" SettingsObjectName="dnnSync.My.MySettings" SettingsPropertyName="AgapeConnectConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.Users" Member="Users">
     <Type Name="User">
@@ -20,6 +20,10 @@
       <Association Name="User_UserProfile" Member="UserProfiles" ThisKey="UserID" OtherKey="UserID" Type="UserProfile" />
       <Association Name="User_AP_StaffBroker_Staff" Member="AP_StaffBroker_Staffs" ThisKey="UserID" OtherKey="UserId1" Type="AP_StaffBroker_Staff" Cardinality="One" />
       <Association Name="User_AP_StaffBroker_Staff1" Member="AP_StaffBroker_Staffs1" ThisKey="UserID" OtherKey="UserId2" Type="AP_StaffBroker_Staff" Cardinality="One" />
+      <Association Name="User_UserRole" Member="UserRoles" ThisKey="UserID" OtherKey="UserID" Type="UserRole" />
+      <Association Name="User_AP_StaffBroker_LeaderMeta" Member="AP_StaffBroker_LeaderMetas" ThisKey="UserID" OtherKey="UserId" Type="AP_StaffBroker_LeaderMeta" />
+      <Association Name="User_AP_StaffBroker_LeaderMeta1" Member="LeaderOf" ThisKey="UserID" OtherKey="LeaderId" Type="AP_StaffBroker_LeaderMeta" />
+      <Association Name="User_AP_StaffBroker_LeaderMeta2" Member="DelegateOf" ThisKey="UserID" OtherKey="DelegateId" Type="AP_StaffBroker_LeaderMeta" />
     </Type>
   </Table>
   <Table Name="dbo.UserProfile" Member="UserProfiles">
@@ -148,6 +152,7 @@
       <Column Name="EstAvgSupport3" Type="System.Decimal" DbType="Money" CanBeNull="true" />
       <Column Name="EstAvgSupport1" Type="System.Decimal" DbType="Money" CanBeNull="true" />
       <Association Name="AP_mpd_Country_Ap_mpd_User" Member="Ap_mpd_Users" ThisKey="mpdCountryId" OtherKey="mpdCountryId" Type="Ap_mpd_User" />
+      <Association Name="AP_mpd_Country_AP_MPD_CountryAdmin" Member="AP_MPD_CountryAdmins" ThisKey="mpdCountryId" OtherKey="ministry_id" Type="AP_MPD_CountryAdmin" />
       <Association Name="AP_mpdCalc_Definition_AP_mpd_Country" Member="AP_mpdCalc_Definition" ThisKey="mpdDefId" OtherKey="mpdDefId" Type="AP_mpdCalc_Definition" IsForeignKey="true" />
     </Type>
   </Table>
@@ -181,6 +186,8 @@
       <Column Name="EstSupLevel12" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
       <Column Name="EstSupLevel3" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
       <Column Name="EstSupLevel1" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="membership_type" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="isNationalStaff" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
       <Association Name="Ap_mpd_User_AP_mpd_UserAccountInfo" Member="AP_mpd_UserAccountInfos" ThisKey="AP_mpd_UserId" OtherKey="mpdUserId" Type="AP_mpd_UserAccountInfo" />
       <Association Name="AP_mpd_Country_Ap_mpd_User" Member="AP_mpd_Country" ThisKey="mpdCountryId" OtherKey="mpdCountryId" Type="AP_mpd_Country" IsForeignKey="true" />
     </Type>
@@ -269,6 +276,70 @@
       <Column Name="expBudget" Type="System.Decimal" DbType="Money NOT NULL" CanBeNull="false" />
       <Column Name="toRaiseBudget" Type="System.Decimal" DbType="Money NOT NULL" CanBeNull="false" />
       <Association Name="Ap_mpd_User_AP_mpd_UserAccountInfo" Member="Ap_mpd_User" ThisKey="mpdUserId" OtherKey="AP_mpd_UserId" Type="Ap_mpd_User" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.UserRoles" Member="UserRoles">
+    <Type Name="UserRole">
+      <Column Name="UserRoleID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="UserID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="RoleID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="ExpiryDate" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="IsTrialUsed" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="EffectiveDate" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="CreatedByUserID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CreatedOnDate" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="LastModifiedByUserID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="LastModifiedOnDate" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Status" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="IsOwner" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Association Name="User_UserRole" Member="User" ThisKey="UserID" OtherKey="UserID" Type="User" IsForeignKey="true" DeleteRule="CASCADE" DeleteOnNull="true" />
+      <Association Name="Role_UserRole" Member="Role" ThisKey="RoleID" OtherKey="RoleID" Type="Role" IsForeignKey="true" DeleteRule="CASCADE" DeleteOnNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Roles" Member="Roles">
+    <Type Name="Role">
+      <Column Name="RoleID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="PortalID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="RoleName" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="Description" Type="System.String" DbType="NVarChar(1000)" CanBeNull="true" />
+      <Column Name="ServiceFee" Type="System.Decimal" DbType="Money" CanBeNull="true" />
+      <Column Name="BillingFrequency" Type="System.Char" DbType="Char(1)" CanBeNull="true" />
+      <Column Name="TrialPeriod" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="TrialFrequency" Type="System.Char" DbType="Char(1)" CanBeNull="true" />
+      <Column Name="BillingPeriod" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="TrialFee" Type="System.Decimal" DbType="Money" CanBeNull="true" />
+      <Column Name="IsPublic" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Column Name="AutoAssignment" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Column Name="RoleGroupID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="RSVPCode" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="IconFile" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Column Name="CreatedByUserID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CreatedOnDate" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="LastModifiedByUserID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="LastModifiedOnDate" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Status" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SecurityMode" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="IsSystemRole" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Association Name="Role_UserRole" Member="UserRoles" ThisKey="RoleID" OtherKey="RoleID" Type="UserRole" />
+    </Type>
+  </Table>
+  <Table Name="dbo.AP_StaffBroker_LeaderMeta" Member="AP_StaffBroker_LeaderMetas">
+    <Type Name="AP_StaffBroker_LeaderMeta">
+      <Column Name="LeaderMetaId" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="UserId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="LeaderId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="DelegateId" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Association Name="User_AP_StaffBroker_LeaderMeta" Member="User" ThisKey="UserId" OtherKey="UserID" Type="User" IsForeignKey="true" />
+      <Association Name="User_AP_StaffBroker_LeaderMeta1" Member="Leader" ThisKey="LeaderId" OtherKey="UserID" Type="User" IsForeignKey="true" />
+      <Association Name="User_AP_StaffBroker_LeaderMeta2" Member="Delegate" ThisKey="DelegateId" OtherKey="UserID" Type="User" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.AP_MPD_CountryAdmin" Member="AP_MPD_CountryAdmins">
+    <Type Name="AP_MPD_CountryAdmin">
+      <Column Name="Id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="sso_guid" Type="System.String" DbType="Char(36) NOT NULL" CanBeNull="false" />
+      <Column Name="ministry_id" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="AP_mpd_Country_AP_MPD_CountryAdmin" Member="AP_mpd_Country" ThisKey="ministry_id" OtherKey="mpdCountryId" Type="AP_mpd_Country" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>

@@ -22,7 +22,7 @@ Imports System.Linq.Expressions
 Imports System.Reflection
 
 
-<Global.System.Data.Linq.Mapping.DatabaseAttribute(Name:="dnn_dev")>  _
+<Global.System.Data.Linq.Mapping.DatabaseAttribute(Name:="agapeconnect-2014-4-12-18-15")>  _
 Partial Public Class AgapeConnectDataContext
 	Inherits System.Data.Linq.DataContext
 	
@@ -120,6 +120,30 @@ Partial Public Class AgapeConnectDataContext
   Partial Private Sub UpdateAP_mpd_UserAccountInfo(instance As AP_mpd_UserAccountInfo)
     End Sub
   Partial Private Sub DeleteAP_mpd_UserAccountInfo(instance As AP_mpd_UserAccountInfo)
+    End Sub
+  Partial Private Sub InsertUserRole(instance As UserRole)
+    End Sub
+  Partial Private Sub UpdateUserRole(instance As UserRole)
+    End Sub
+  Partial Private Sub DeleteUserRole(instance As UserRole)
+    End Sub
+  Partial Private Sub InsertRole(instance As Role)
+    End Sub
+  Partial Private Sub UpdateRole(instance As Role)
+    End Sub
+  Partial Private Sub DeleteRole(instance As Role)
+    End Sub
+  Partial Private Sub InsertAP_StaffBroker_LeaderMeta(instance As AP_StaffBroker_LeaderMeta)
+    End Sub
+  Partial Private Sub UpdateAP_StaffBroker_LeaderMeta(instance As AP_StaffBroker_LeaderMeta)
+    End Sub
+  Partial Private Sub DeleteAP_StaffBroker_LeaderMeta(instance As AP_StaffBroker_LeaderMeta)
+    End Sub
+  Partial Private Sub InsertAP_MPD_CountryAdmin(instance As AP_MPD_CountryAdmin)
+    End Sub
+  Partial Private Sub UpdateAP_MPD_CountryAdmin(instance As AP_MPD_CountryAdmin)
+    End Sub
+  Partial Private Sub DeleteAP_MPD_CountryAdmin(instance As AP_MPD_CountryAdmin)
     End Sub
   #End Region
 	
@@ -237,6 +261,30 @@ Partial Public Class AgapeConnectDataContext
 			Return Me.GetTable(Of AP_mpd_UserAccountInfo)
 		End Get
 	End Property
+	
+	Public ReadOnly Property UserRoles() As System.Data.Linq.Table(Of UserRole)
+		Get
+			Return Me.GetTable(Of UserRole)
+		End Get
+	End Property
+	
+	Public ReadOnly Property Roles() As System.Data.Linq.Table(Of Role)
+		Get
+			Return Me.GetTable(Of Role)
+		End Get
+	End Property
+	
+	Public ReadOnly Property AP_StaffBroker_LeaderMetas() As System.Data.Linq.Table(Of AP_StaffBroker_LeaderMeta)
+		Get
+			Return Me.GetTable(Of AP_StaffBroker_LeaderMeta)
+		End Get
+	End Property
+	
+	Public ReadOnly Property AP_MPD_CountryAdmins() As System.Data.Linq.Table(Of AP_MPD_CountryAdmin)
+		Get
+			Return Me.GetTable(Of AP_MPD_CountryAdmin)
+		End Get
+	End Property
 End Class
 
 <Global.System.Data.Linq.Mapping.TableAttribute(Name:="dbo.Users")>  _
@@ -280,6 +328,14 @@ Partial Public Class User
 	Private _AP_StaffBroker_Staffs As EntityRef(Of AP_StaffBroker_Staff)
 	
 	Private _AP_StaffBroker_Staffs1 As EntityRef(Of AP_StaffBroker_Staff)
+	
+	Private _UserRoles As EntitySet(Of UserRole)
+	
+	Private _AP_StaffBroker_LeaderMetas As EntitySet(Of AP_StaffBroker_LeaderMeta)
+	
+	Private _LeaderOf As EntitySet(Of AP_StaffBroker_LeaderMeta)
+	
+	Private _DelegateOf As EntitySet(Of AP_StaffBroker_LeaderMeta)
 	
     #Region "Extensibility Method Definitions"
     Partial Private Sub OnLoaded()
@@ -355,6 +411,10 @@ Partial Public Class User
 		Me._UserProfiles = New EntitySet(Of UserProfile)(AddressOf Me.attach_UserProfiles, AddressOf Me.detach_UserProfiles)
 		Me._AP_StaffBroker_Staffs = CType(Nothing, EntityRef(Of AP_StaffBroker_Staff))
 		Me._AP_StaffBroker_Staffs1 = CType(Nothing, EntityRef(Of AP_StaffBroker_Staff))
+		Me._UserRoles = New EntitySet(Of UserRole)(AddressOf Me.attach_UserRoles, AddressOf Me.detach_UserRoles)
+		Me._AP_StaffBroker_LeaderMetas = New EntitySet(Of AP_StaffBroker_LeaderMeta)(AddressOf Me.attach_AP_StaffBroker_LeaderMetas, AddressOf Me.detach_AP_StaffBroker_LeaderMetas)
+		Me._LeaderOf = New EntitySet(Of AP_StaffBroker_LeaderMeta)(AddressOf Me.attach_LeaderOf, AddressOf Me.detach_LeaderOf)
+		Me._DelegateOf = New EntitySet(Of AP_StaffBroker_LeaderMeta)(AddressOf Me.attach_DelegateOf, AddressOf Me.detach_DelegateOf)
 		OnCreated
 	End Sub
 	
@@ -660,6 +720,46 @@ Partial Public Class User
 		End Set
 	End Property
 	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_UserRole", Storage:="_UserRoles", ThisKey:="UserID", OtherKey:="UserID")>  _
+	Public Property UserRoles() As EntitySet(Of UserRole)
+		Get
+			Return Me._UserRoles
+		End Get
+		Set
+			Me._UserRoles.Assign(value)
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_AP_StaffBroker_LeaderMeta", Storage:="_AP_StaffBroker_LeaderMetas", ThisKey:="UserID", OtherKey:="UserId")>  _
+	Public Property AP_StaffBroker_LeaderMetas() As EntitySet(Of AP_StaffBroker_LeaderMeta)
+		Get
+			Return Me._AP_StaffBroker_LeaderMetas
+		End Get
+		Set
+			Me._AP_StaffBroker_LeaderMetas.Assign(value)
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_AP_StaffBroker_LeaderMeta1", Storage:="_LeaderOf", ThisKey:="UserID", OtherKey:="LeaderId")>  _
+	Public Property LeaderOf() As EntitySet(Of AP_StaffBroker_LeaderMeta)
+		Get
+			Return Me._LeaderOf
+		End Get
+		Set
+			Me._LeaderOf.Assign(value)
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_AP_StaffBroker_LeaderMeta2", Storage:="_DelegateOf", ThisKey:="UserID", OtherKey:="DelegateId")>  _
+	Public Property DelegateOf() As EntitySet(Of AP_StaffBroker_LeaderMeta)
+		Get
+			Return Me._DelegateOf
+		End Get
+		Set
+			Me._DelegateOf.Assign(value)
+		End Set
+	End Property
+	
 	Public Event PropertyChanging As PropertyChangingEventHandler Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
 	
 	Public Event PropertyChanged As PropertyChangedEventHandler Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
@@ -686,6 +786,46 @@ Partial Public Class User
 	Private Sub detach_UserProfiles(ByVal entity As UserProfile)
 		Me.SendPropertyChanging
 		entity.User = Nothing
+	End Sub
+	
+	Private Sub attach_UserRoles(ByVal entity As UserRole)
+		Me.SendPropertyChanging
+		entity.User = Me
+	End Sub
+	
+	Private Sub detach_UserRoles(ByVal entity As UserRole)
+		Me.SendPropertyChanging
+		entity.User = Nothing
+	End Sub
+	
+	Private Sub attach_AP_StaffBroker_LeaderMetas(ByVal entity As AP_StaffBroker_LeaderMeta)
+		Me.SendPropertyChanging
+		entity.User = Me
+	End Sub
+	
+	Private Sub detach_AP_StaffBroker_LeaderMetas(ByVal entity As AP_StaffBroker_LeaderMeta)
+		Me.SendPropertyChanging
+		entity.User = Nothing
+	End Sub
+	
+	Private Sub attach_LeaderOf(ByVal entity As AP_StaffBroker_LeaderMeta)
+		Me.SendPropertyChanging
+		entity.Leader = Me
+	End Sub
+	
+	Private Sub detach_LeaderOf(ByVal entity As AP_StaffBroker_LeaderMeta)
+		Me.SendPropertyChanging
+		entity.Leader = Nothing
+	End Sub
+	
+	Private Sub attach_DelegateOf(ByVal entity As AP_StaffBroker_LeaderMeta)
+		Me.SendPropertyChanging
+		entity.[Delegate] = Me
+	End Sub
+	
+	Private Sub detach_DelegateOf(ByVal entity As AP_StaffBroker_LeaderMeta)
+		Me.SendPropertyChanging
+		entity.[Delegate] = Nothing
 	End Sub
 End Class
 
@@ -2612,6 +2752,8 @@ Partial Public Class AP_mpd_Country
 	
 	Private _Ap_mpd_Users As EntitySet(Of Ap_mpd_User)
 	
+	Private _AP_MPD_CountryAdmins As EntitySet(Of AP_MPD_CountryAdmin)
+	
 	Private _AP_mpdCalc_Definition As EntityRef(Of AP_mpdCalc_Definition)
 	
     #Region "Extensibility Method Definitions"
@@ -2738,6 +2880,7 @@ Partial Public Class AP_mpd_Country
 	Public Sub New()
 		MyBase.New
 		Me._Ap_mpd_Users = New EntitySet(Of Ap_mpd_User)(AddressOf Me.attach_Ap_mpd_Users, AddressOf Me.detach_Ap_mpd_Users)
+		Me._AP_MPD_CountryAdmins = New EntitySet(Of AP_MPD_CountryAdmin)(AddressOf Me.attach_AP_MPD_CountryAdmins, AddressOf Me.detach_AP_MPD_CountryAdmins)
 		Me._AP_mpdCalc_Definition = CType(Nothing, EntityRef(Of AP_mpdCalc_Definition))
 		OnCreated
 	End Sub
@@ -3213,6 +3356,16 @@ Partial Public Class AP_mpd_Country
 		End Set
 	End Property
 	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="AP_mpd_Country_AP_MPD_CountryAdmin", Storage:="_AP_MPD_CountryAdmins", ThisKey:="mpdCountryId", OtherKey:="ministry_id")>  _
+	Public Property AP_MPD_CountryAdmins() As EntitySet(Of AP_MPD_CountryAdmin)
+		Get
+			Return Me._AP_MPD_CountryAdmins
+		End Get
+		Set
+			Me._AP_MPD_CountryAdmins.Assign(value)
+		End Set
+	End Property
+	
 	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="AP_mpdCalc_Definition_AP_mpd_Country", Storage:="_AP_mpdCalc_Definition", ThisKey:="mpdDefId", OtherKey:="mpdDefId", IsForeignKey:=true)>  _
 	Public Property AP_mpdCalc_Definition() As AP_mpdCalc_Definition
 		Get
@@ -3265,6 +3418,16 @@ Partial Public Class AP_mpd_Country
 	End Sub
 	
 	Private Sub detach_Ap_mpd_Users(ByVal entity As Ap_mpd_User)
+		Me.SendPropertyChanging
+		entity.AP_mpd_Country = Nothing
+	End Sub
+	
+	Private Sub attach_AP_MPD_CountryAdmins(ByVal entity As AP_MPD_CountryAdmin)
+		Me.SendPropertyChanging
+		entity.AP_mpd_Country = Me
+	End Sub
+	
+	Private Sub detach_AP_MPD_CountryAdmins(ByVal entity As AP_MPD_CountryAdmin)
 		Me.SendPropertyChanging
 		entity.AP_mpd_Country = Nothing
 	End Sub
@@ -3331,6 +3494,10 @@ Partial Public Class Ap_mpd_User
 	Private _EstSupLevel3 As Double
 	
 	Private _EstSupLevel1 As Double
+	
+	Private _membership_type As String
+	
+	Private _isNationalStaff As Boolean
 	
 	Private _AP_mpd_UserAccountInfos As EntitySet(Of AP_mpd_UserAccountInfo)
 	
@@ -3454,6 +3621,14 @@ Partial Public Class Ap_mpd_User
     Partial Private Sub OnEstSupLevel1Changing(value As Double)
     End Sub
     Partial Private Sub OnEstSupLevel1Changed()
+    End Sub
+    Partial Private Sub Onmembership_typeChanging(value As String)
+    End Sub
+    Partial Private Sub Onmembership_typeChanged()
+    End Sub
+    Partial Private Sub OnisNationalStaffChanging(value As Boolean)
+    End Sub
+    Partial Private Sub OnisNationalStaffChanged()
     End Sub
     #End Region
 	
@@ -3931,6 +4106,39 @@ Partial Public Class Ap_mpd_User
 				Me._EstSupLevel1 = value
 				Me.SendPropertyChanged("EstSupLevel1")
 				Me.OnEstSupLevel1Changed
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_membership_type", DbType:="NVarChar(50)")>  _
+	Public Property membership_type() As String
+		Get
+			Return Me._membership_type
+		End Get
+		Set
+			If (String.Equals(Me._membership_type, value) = false) Then
+				Me.Onmembership_typeChanging(value)
+				Me.SendPropertyChanging
+				Me._membership_type = value
+				Me.SendPropertyChanged("membership_type")
+				Me.Onmembership_typeChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_isNationalStaff", DbType:="Bit NOT NULL")>  _
+	Public Property isNationalStaff() As Boolean
+		Get
+			Return Me._isNationalStaff
+		End Get
+		Set
+			If ((Me._isNationalStaff = value)  _
+						= false) Then
+				Me.OnisNationalStaffChanging(value)
+				Me.SendPropertyChanging
+				Me._isNationalStaff = value
+				Me.SendPropertyChanged("isNationalStaff")
+				Me.OnisNationalStaffChanged
 			End If
 		End Set
 	End Property
@@ -5684,6 +5892,1307 @@ Partial Public Class AP_mpd_UserAccountInfo
 					Me._mpdUserId = CType(Nothing, Nullable(Of Long))
 				End If
 				Me.SendPropertyChanged("Ap_mpd_User")
+			End If
+		End Set
+	End Property
+	
+	Public Event PropertyChanging As PropertyChangingEventHandler Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
+	
+	Public Event PropertyChanged As PropertyChangedEventHandler Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+	
+	Protected Overridable Sub SendPropertyChanging()
+		If ((Me.PropertyChangingEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanging(Me, emptyChangingEventArgs)
+		End If
+	End Sub
+	
+	Protected Overridable Sub SendPropertyChanged(ByVal propertyName As [String])
+		If ((Me.PropertyChangedEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
+		End If
+	End Sub
+End Class
+
+<Global.System.Data.Linq.Mapping.TableAttribute(Name:="dbo.UserRoles")>  _
+Partial Public Class UserRole
+	Implements System.ComponentModel.INotifyPropertyChanging, System.ComponentModel.INotifyPropertyChanged
+	
+	Private Shared emptyChangingEventArgs As PropertyChangingEventArgs = New PropertyChangingEventArgs(String.Empty)
+	
+	Private _UserRoleID As Integer
+	
+	Private _UserID As Integer
+	
+	Private _RoleID As Integer
+	
+	Private _ExpiryDate As System.Nullable(Of Date)
+	
+	Private _IsTrialUsed As System.Nullable(Of Boolean)
+	
+	Private _EffectiveDate As System.Nullable(Of Date)
+	
+	Private _CreatedByUserID As System.Nullable(Of Integer)
+	
+	Private _CreatedOnDate As System.Nullable(Of Date)
+	
+	Private _LastModifiedByUserID As System.Nullable(Of Integer)
+	
+	Private _LastModifiedOnDate As System.Nullable(Of Date)
+	
+	Private _Status As Integer
+	
+	Private _IsOwner As Boolean
+	
+	Private _User As EntityRef(Of User)
+	
+	Private _Role As EntityRef(Of Role)
+	
+    #Region "Extensibility Method Definitions"
+    Partial Private Sub OnLoaded()
+    End Sub
+    Partial Private Sub OnValidate(action As System.Data.Linq.ChangeAction)
+    End Sub
+    Partial Private Sub OnCreated()
+    End Sub
+    Partial Private Sub OnUserRoleIDChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnUserRoleIDChanged()
+    End Sub
+    Partial Private Sub OnUserIDChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnUserIDChanged()
+    End Sub
+    Partial Private Sub OnRoleIDChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnRoleIDChanged()
+    End Sub
+    Partial Private Sub OnExpiryDateChanging(value As System.Nullable(Of Date))
+    End Sub
+    Partial Private Sub OnExpiryDateChanged()
+    End Sub
+    Partial Private Sub OnIsTrialUsedChanging(value As System.Nullable(Of Boolean))
+    End Sub
+    Partial Private Sub OnIsTrialUsedChanged()
+    End Sub
+    Partial Private Sub OnEffectiveDateChanging(value As System.Nullable(Of Date))
+    End Sub
+    Partial Private Sub OnEffectiveDateChanged()
+    End Sub
+    Partial Private Sub OnCreatedByUserIDChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnCreatedByUserIDChanged()
+    End Sub
+    Partial Private Sub OnCreatedOnDateChanging(value As System.Nullable(Of Date))
+    End Sub
+    Partial Private Sub OnCreatedOnDateChanged()
+    End Sub
+    Partial Private Sub OnLastModifiedByUserIDChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnLastModifiedByUserIDChanged()
+    End Sub
+    Partial Private Sub OnLastModifiedOnDateChanging(value As System.Nullable(Of Date))
+    End Sub
+    Partial Private Sub OnLastModifiedOnDateChanged()
+    End Sub
+    Partial Private Sub OnStatusChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnStatusChanged()
+    End Sub
+    Partial Private Sub OnIsOwnerChanging(value As Boolean)
+    End Sub
+    Partial Private Sub OnIsOwnerChanged()
+    End Sub
+    #End Region
+	
+	Public Sub New()
+		MyBase.New
+		Me._User = CType(Nothing, EntityRef(Of User))
+		Me._Role = CType(Nothing, EntityRef(Of Role))
+		OnCreated
+	End Sub
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_UserRoleID", AutoSync:=AutoSync.OnInsert, DbType:="Int NOT NULL IDENTITY", IsPrimaryKey:=true, IsDbGenerated:=true)>  _
+	Public Property UserRoleID() As Integer
+		Get
+			Return Me._UserRoleID
+		End Get
+		Set
+			If ((Me._UserRoleID = value)  _
+						= false) Then
+				Me.OnUserRoleIDChanging(value)
+				Me.SendPropertyChanging
+				Me._UserRoleID = value
+				Me.SendPropertyChanged("UserRoleID")
+				Me.OnUserRoleIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_UserID", DbType:="Int NOT NULL")>  _
+	Public Property UserID() As Integer
+		Get
+			Return Me._UserID
+		End Get
+		Set
+			If ((Me._UserID = value)  _
+						= false) Then
+				If Me._User.HasLoadedOrAssignedValue Then
+					Throw New System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException()
+				End If
+				Me.OnUserIDChanging(value)
+				Me.SendPropertyChanging
+				Me._UserID = value
+				Me.SendPropertyChanged("UserID")
+				Me.OnUserIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_RoleID", DbType:="Int NOT NULL")>  _
+	Public Property RoleID() As Integer
+		Get
+			Return Me._RoleID
+		End Get
+		Set
+			If ((Me._RoleID = value)  _
+						= false) Then
+				If Me._Role.HasLoadedOrAssignedValue Then
+					Throw New System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException()
+				End If
+				Me.OnRoleIDChanging(value)
+				Me.SendPropertyChanging
+				Me._RoleID = value
+				Me.SendPropertyChanged("RoleID")
+				Me.OnRoleIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_ExpiryDate", DbType:="DateTime")>  _
+	Public Property ExpiryDate() As System.Nullable(Of Date)
+		Get
+			Return Me._ExpiryDate
+		End Get
+		Set
+			If (Me._ExpiryDate.Equals(value) = false) Then
+				Me.OnExpiryDateChanging(value)
+				Me.SendPropertyChanging
+				Me._ExpiryDate = value
+				Me.SendPropertyChanged("ExpiryDate")
+				Me.OnExpiryDateChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_IsTrialUsed", DbType:="Bit")>  _
+	Public Property IsTrialUsed() As System.Nullable(Of Boolean)
+		Get
+			Return Me._IsTrialUsed
+		End Get
+		Set
+			If (Me._IsTrialUsed.Equals(value) = false) Then
+				Me.OnIsTrialUsedChanging(value)
+				Me.SendPropertyChanging
+				Me._IsTrialUsed = value
+				Me.SendPropertyChanged("IsTrialUsed")
+				Me.OnIsTrialUsedChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_EffectiveDate", DbType:="DateTime")>  _
+	Public Property EffectiveDate() As System.Nullable(Of Date)
+		Get
+			Return Me._EffectiveDate
+		End Get
+		Set
+			If (Me._EffectiveDate.Equals(value) = false) Then
+				Me.OnEffectiveDateChanging(value)
+				Me.SendPropertyChanging
+				Me._EffectiveDate = value
+				Me.SendPropertyChanged("EffectiveDate")
+				Me.OnEffectiveDateChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_CreatedByUserID", DbType:="Int")>  _
+	Public Property CreatedByUserID() As System.Nullable(Of Integer)
+		Get
+			Return Me._CreatedByUserID
+		End Get
+		Set
+			If (Me._CreatedByUserID.Equals(value) = false) Then
+				Me.OnCreatedByUserIDChanging(value)
+				Me.SendPropertyChanging
+				Me._CreatedByUserID = value
+				Me.SendPropertyChanged("CreatedByUserID")
+				Me.OnCreatedByUserIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_CreatedOnDate", DbType:="DateTime")>  _
+	Public Property CreatedOnDate() As System.Nullable(Of Date)
+		Get
+			Return Me._CreatedOnDate
+		End Get
+		Set
+			If (Me._CreatedOnDate.Equals(value) = false) Then
+				Me.OnCreatedOnDateChanging(value)
+				Me.SendPropertyChanging
+				Me._CreatedOnDate = value
+				Me.SendPropertyChanged("CreatedOnDate")
+				Me.OnCreatedOnDateChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_LastModifiedByUserID", DbType:="Int")>  _
+	Public Property LastModifiedByUserID() As System.Nullable(Of Integer)
+		Get
+			Return Me._LastModifiedByUserID
+		End Get
+		Set
+			If (Me._LastModifiedByUserID.Equals(value) = false) Then
+				Me.OnLastModifiedByUserIDChanging(value)
+				Me.SendPropertyChanging
+				Me._LastModifiedByUserID = value
+				Me.SendPropertyChanged("LastModifiedByUserID")
+				Me.OnLastModifiedByUserIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_LastModifiedOnDate", DbType:="DateTime")>  _
+	Public Property LastModifiedOnDate() As System.Nullable(Of Date)
+		Get
+			Return Me._LastModifiedOnDate
+		End Get
+		Set
+			If (Me._LastModifiedOnDate.Equals(value) = false) Then
+				Me.OnLastModifiedOnDateChanging(value)
+				Me.SendPropertyChanging
+				Me._LastModifiedOnDate = value
+				Me.SendPropertyChanged("LastModifiedOnDate")
+				Me.OnLastModifiedOnDateChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_Status", DbType:="Int NOT NULL")>  _
+	Public Property Status() As Integer
+		Get
+			Return Me._Status
+		End Get
+		Set
+			If ((Me._Status = value)  _
+						= false) Then
+				Me.OnStatusChanging(value)
+				Me.SendPropertyChanging
+				Me._Status = value
+				Me.SendPropertyChanged("Status")
+				Me.OnStatusChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_IsOwner", DbType:="Bit NOT NULL")>  _
+	Public Property IsOwner() As Boolean
+		Get
+			Return Me._IsOwner
+		End Get
+		Set
+			If ((Me._IsOwner = value)  _
+						= false) Then
+				Me.OnIsOwnerChanging(value)
+				Me.SendPropertyChanging
+				Me._IsOwner = value
+				Me.SendPropertyChanged("IsOwner")
+				Me.OnIsOwnerChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_UserRole", Storage:="_User", ThisKey:="UserID", OtherKey:="UserID", IsForeignKey:=true, DeleteOnNull:=true, DeleteRule:="CASCADE")>  _
+	Public Property User() As User
+		Get
+			Return Me._User.Entity
+		End Get
+		Set
+			Dim previousValue As User = Me._User.Entity
+			If ((Object.Equals(previousValue, value) = false)  _
+						OrElse (Me._User.HasLoadedOrAssignedValue = false)) Then
+				Me.SendPropertyChanging
+				If ((previousValue Is Nothing)  _
+							= false) Then
+					Me._User.Entity = Nothing
+					previousValue.UserRoles.Remove(Me)
+				End If
+				Me._User.Entity = value
+				If ((value Is Nothing)  _
+							= false) Then
+					value.UserRoles.Add(Me)
+					Me._UserID = value.UserID
+				Else
+					Me._UserID = CType(Nothing, Integer)
+				End If
+				Me.SendPropertyChanged("User")
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="Role_UserRole", Storage:="_Role", ThisKey:="RoleID", OtherKey:="RoleID", IsForeignKey:=true, DeleteOnNull:=true, DeleteRule:="CASCADE")>  _
+	Public Property Role() As Role
+		Get
+			Return Me._Role.Entity
+		End Get
+		Set
+			Dim previousValue As Role = Me._Role.Entity
+			If ((Object.Equals(previousValue, value) = false)  _
+						OrElse (Me._Role.HasLoadedOrAssignedValue = false)) Then
+				Me.SendPropertyChanging
+				If ((previousValue Is Nothing)  _
+							= false) Then
+					Me._Role.Entity = Nothing
+					previousValue.UserRoles.Remove(Me)
+				End If
+				Me._Role.Entity = value
+				If ((value Is Nothing)  _
+							= false) Then
+					value.UserRoles.Add(Me)
+					Me._RoleID = value.RoleID
+				Else
+					Me._RoleID = CType(Nothing, Integer)
+				End If
+				Me.SendPropertyChanged("Role")
+			End If
+		End Set
+	End Property
+	
+	Public Event PropertyChanging As PropertyChangingEventHandler Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
+	
+	Public Event PropertyChanged As PropertyChangedEventHandler Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+	
+	Protected Overridable Sub SendPropertyChanging()
+		If ((Me.PropertyChangingEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanging(Me, emptyChangingEventArgs)
+		End If
+	End Sub
+	
+	Protected Overridable Sub SendPropertyChanged(ByVal propertyName As [String])
+		If ((Me.PropertyChangedEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
+		End If
+	End Sub
+End Class
+
+<Global.System.Data.Linq.Mapping.TableAttribute(Name:="dbo.Roles")>  _
+Partial Public Class Role
+	Implements System.ComponentModel.INotifyPropertyChanging, System.ComponentModel.INotifyPropertyChanged
+	
+	Private Shared emptyChangingEventArgs As PropertyChangingEventArgs = New PropertyChangingEventArgs(String.Empty)
+	
+	Private _RoleID As Integer
+	
+	Private _PortalID As System.Nullable(Of Integer)
+	
+	Private _RoleName As String
+	
+	Private _Description As String
+	
+	Private _ServiceFee As System.Nullable(Of Decimal)
+	
+	Private _BillingFrequency As System.Nullable(Of Char)
+	
+	Private _TrialPeriod As System.Nullable(Of Integer)
+	
+	Private _TrialFrequency As System.Nullable(Of Char)
+	
+	Private _BillingPeriod As System.Nullable(Of Integer)
+	
+	Private _TrialFee As System.Nullable(Of Decimal)
+	
+	Private _IsPublic As Boolean
+	
+	Private _AutoAssignment As Boolean
+	
+	Private _RoleGroupID As System.Nullable(Of Integer)
+	
+	Private _RSVPCode As String
+	
+	Private _IconFile As String
+	
+	Private _CreatedByUserID As System.Nullable(Of Integer)
+	
+	Private _CreatedOnDate As System.Nullable(Of Date)
+	
+	Private _LastModifiedByUserID As System.Nullable(Of Integer)
+	
+	Private _LastModifiedOnDate As System.Nullable(Of Date)
+	
+	Private _Status As Integer
+	
+	Private _SecurityMode As Integer
+	
+	Private _IsSystemRole As Boolean
+	
+	Private _UserRoles As EntitySet(Of UserRole)
+	
+    #Region "Extensibility Method Definitions"
+    Partial Private Sub OnLoaded()
+    End Sub
+    Partial Private Sub OnValidate(action As System.Data.Linq.ChangeAction)
+    End Sub
+    Partial Private Sub OnCreated()
+    End Sub
+    Partial Private Sub OnRoleIDChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnRoleIDChanged()
+    End Sub
+    Partial Private Sub OnPortalIDChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnPortalIDChanged()
+    End Sub
+    Partial Private Sub OnRoleNameChanging(value As String)
+    End Sub
+    Partial Private Sub OnRoleNameChanged()
+    End Sub
+    Partial Private Sub OnDescriptionChanging(value As String)
+    End Sub
+    Partial Private Sub OnDescriptionChanged()
+    End Sub
+    Partial Private Sub OnServiceFeeChanging(value As System.Nullable(Of Decimal))
+    End Sub
+    Partial Private Sub OnServiceFeeChanged()
+    End Sub
+    Partial Private Sub OnBillingFrequencyChanging(value As System.Nullable(Of Char))
+    End Sub
+    Partial Private Sub OnBillingFrequencyChanged()
+    End Sub
+    Partial Private Sub OnTrialPeriodChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnTrialPeriodChanged()
+    End Sub
+    Partial Private Sub OnTrialFrequencyChanging(value As System.Nullable(Of Char))
+    End Sub
+    Partial Private Sub OnTrialFrequencyChanged()
+    End Sub
+    Partial Private Sub OnBillingPeriodChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnBillingPeriodChanged()
+    End Sub
+    Partial Private Sub OnTrialFeeChanging(value As System.Nullable(Of Decimal))
+    End Sub
+    Partial Private Sub OnTrialFeeChanged()
+    End Sub
+    Partial Private Sub OnIsPublicChanging(value As Boolean)
+    End Sub
+    Partial Private Sub OnIsPublicChanged()
+    End Sub
+    Partial Private Sub OnAutoAssignmentChanging(value As Boolean)
+    End Sub
+    Partial Private Sub OnAutoAssignmentChanged()
+    End Sub
+    Partial Private Sub OnRoleGroupIDChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnRoleGroupIDChanged()
+    End Sub
+    Partial Private Sub OnRSVPCodeChanging(value As String)
+    End Sub
+    Partial Private Sub OnRSVPCodeChanged()
+    End Sub
+    Partial Private Sub OnIconFileChanging(value As String)
+    End Sub
+    Partial Private Sub OnIconFileChanged()
+    End Sub
+    Partial Private Sub OnCreatedByUserIDChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnCreatedByUserIDChanged()
+    End Sub
+    Partial Private Sub OnCreatedOnDateChanging(value As System.Nullable(Of Date))
+    End Sub
+    Partial Private Sub OnCreatedOnDateChanged()
+    End Sub
+    Partial Private Sub OnLastModifiedByUserIDChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnLastModifiedByUserIDChanged()
+    End Sub
+    Partial Private Sub OnLastModifiedOnDateChanging(value As System.Nullable(Of Date))
+    End Sub
+    Partial Private Sub OnLastModifiedOnDateChanged()
+    End Sub
+    Partial Private Sub OnStatusChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnStatusChanged()
+    End Sub
+    Partial Private Sub OnSecurityModeChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnSecurityModeChanged()
+    End Sub
+    Partial Private Sub OnIsSystemRoleChanging(value As Boolean)
+    End Sub
+    Partial Private Sub OnIsSystemRoleChanged()
+    End Sub
+    #End Region
+	
+	Public Sub New()
+		MyBase.New
+		Me._UserRoles = New EntitySet(Of UserRole)(AddressOf Me.attach_UserRoles, AddressOf Me.detach_UserRoles)
+		OnCreated
+	End Sub
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_RoleID", AutoSync:=AutoSync.OnInsert, DbType:="Int NOT NULL IDENTITY", IsPrimaryKey:=true, IsDbGenerated:=true)>  _
+	Public Property RoleID() As Integer
+		Get
+			Return Me._RoleID
+		End Get
+		Set
+			If ((Me._RoleID = value)  _
+						= false) Then
+				Me.OnRoleIDChanging(value)
+				Me.SendPropertyChanging
+				Me._RoleID = value
+				Me.SendPropertyChanged("RoleID")
+				Me.OnRoleIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_PortalID", DbType:="Int")>  _
+	Public Property PortalID() As System.Nullable(Of Integer)
+		Get
+			Return Me._PortalID
+		End Get
+		Set
+			If (Me._PortalID.Equals(value) = false) Then
+				Me.OnPortalIDChanging(value)
+				Me.SendPropertyChanging
+				Me._PortalID = value
+				Me.SendPropertyChanged("PortalID")
+				Me.OnPortalIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_RoleName", DbType:="NVarChar(50) NOT NULL", CanBeNull:=false)>  _
+	Public Property RoleName() As String
+		Get
+			Return Me._RoleName
+		End Get
+		Set
+			If (String.Equals(Me._RoleName, value) = false) Then
+				Me.OnRoleNameChanging(value)
+				Me.SendPropertyChanging
+				Me._RoleName = value
+				Me.SendPropertyChanged("RoleName")
+				Me.OnRoleNameChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_Description", DbType:="NVarChar(1000)")>  _
+	Public Property Description() As String
+		Get
+			Return Me._Description
+		End Get
+		Set
+			If (String.Equals(Me._Description, value) = false) Then
+				Me.OnDescriptionChanging(value)
+				Me.SendPropertyChanging
+				Me._Description = value
+				Me.SendPropertyChanged("Description")
+				Me.OnDescriptionChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_ServiceFee", DbType:="Money")>  _
+	Public Property ServiceFee() As System.Nullable(Of Decimal)
+		Get
+			Return Me._ServiceFee
+		End Get
+		Set
+			If (Me._ServiceFee.Equals(value) = false) Then
+				Me.OnServiceFeeChanging(value)
+				Me.SendPropertyChanging
+				Me._ServiceFee = value
+				Me.SendPropertyChanged("ServiceFee")
+				Me.OnServiceFeeChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_BillingFrequency", DbType:="Char(1)")>  _
+	Public Property BillingFrequency() As System.Nullable(Of Char)
+		Get
+			Return Me._BillingFrequency
+		End Get
+		Set
+			If (Me._BillingFrequency.Equals(value) = false) Then
+				Me.OnBillingFrequencyChanging(value)
+				Me.SendPropertyChanging
+				Me._BillingFrequency = value
+				Me.SendPropertyChanged("BillingFrequency")
+				Me.OnBillingFrequencyChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_TrialPeriod", DbType:="Int")>  _
+	Public Property TrialPeriod() As System.Nullable(Of Integer)
+		Get
+			Return Me._TrialPeriod
+		End Get
+		Set
+			If (Me._TrialPeriod.Equals(value) = false) Then
+				Me.OnTrialPeriodChanging(value)
+				Me.SendPropertyChanging
+				Me._TrialPeriod = value
+				Me.SendPropertyChanged("TrialPeriod")
+				Me.OnTrialPeriodChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_TrialFrequency", DbType:="Char(1)")>  _
+	Public Property TrialFrequency() As System.Nullable(Of Char)
+		Get
+			Return Me._TrialFrequency
+		End Get
+		Set
+			If (Me._TrialFrequency.Equals(value) = false) Then
+				Me.OnTrialFrequencyChanging(value)
+				Me.SendPropertyChanging
+				Me._TrialFrequency = value
+				Me.SendPropertyChanged("TrialFrequency")
+				Me.OnTrialFrequencyChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_BillingPeriod", DbType:="Int")>  _
+	Public Property BillingPeriod() As System.Nullable(Of Integer)
+		Get
+			Return Me._BillingPeriod
+		End Get
+		Set
+			If (Me._BillingPeriod.Equals(value) = false) Then
+				Me.OnBillingPeriodChanging(value)
+				Me.SendPropertyChanging
+				Me._BillingPeriod = value
+				Me.SendPropertyChanged("BillingPeriod")
+				Me.OnBillingPeriodChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_TrialFee", DbType:="Money")>  _
+	Public Property TrialFee() As System.Nullable(Of Decimal)
+		Get
+			Return Me._TrialFee
+		End Get
+		Set
+			If (Me._TrialFee.Equals(value) = false) Then
+				Me.OnTrialFeeChanging(value)
+				Me.SendPropertyChanging
+				Me._TrialFee = value
+				Me.SendPropertyChanged("TrialFee")
+				Me.OnTrialFeeChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_IsPublic", DbType:="Bit NOT NULL")>  _
+	Public Property IsPublic() As Boolean
+		Get
+			Return Me._IsPublic
+		End Get
+		Set
+			If ((Me._IsPublic = value)  _
+						= false) Then
+				Me.OnIsPublicChanging(value)
+				Me.SendPropertyChanging
+				Me._IsPublic = value
+				Me.SendPropertyChanged("IsPublic")
+				Me.OnIsPublicChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_AutoAssignment", DbType:="Bit NOT NULL")>  _
+	Public Property AutoAssignment() As Boolean
+		Get
+			Return Me._AutoAssignment
+		End Get
+		Set
+			If ((Me._AutoAssignment = value)  _
+						= false) Then
+				Me.OnAutoAssignmentChanging(value)
+				Me.SendPropertyChanging
+				Me._AutoAssignment = value
+				Me.SendPropertyChanged("AutoAssignment")
+				Me.OnAutoAssignmentChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_RoleGroupID", DbType:="Int")>  _
+	Public Property RoleGroupID() As System.Nullable(Of Integer)
+		Get
+			Return Me._RoleGroupID
+		End Get
+		Set
+			If (Me._RoleGroupID.Equals(value) = false) Then
+				Me.OnRoleGroupIDChanging(value)
+				Me.SendPropertyChanging
+				Me._RoleGroupID = value
+				Me.SendPropertyChanged("RoleGroupID")
+				Me.OnRoleGroupIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_RSVPCode", DbType:="NVarChar(50)")>  _
+	Public Property RSVPCode() As String
+		Get
+			Return Me._RSVPCode
+		End Get
+		Set
+			If (String.Equals(Me._RSVPCode, value) = false) Then
+				Me.OnRSVPCodeChanging(value)
+				Me.SendPropertyChanging
+				Me._RSVPCode = value
+				Me.SendPropertyChanged("RSVPCode")
+				Me.OnRSVPCodeChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_IconFile", DbType:="NVarChar(100)")>  _
+	Public Property IconFile() As String
+		Get
+			Return Me._IconFile
+		End Get
+		Set
+			If (String.Equals(Me._IconFile, value) = false) Then
+				Me.OnIconFileChanging(value)
+				Me.SendPropertyChanging
+				Me._IconFile = value
+				Me.SendPropertyChanged("IconFile")
+				Me.OnIconFileChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_CreatedByUserID", DbType:="Int")>  _
+	Public Property CreatedByUserID() As System.Nullable(Of Integer)
+		Get
+			Return Me._CreatedByUserID
+		End Get
+		Set
+			If (Me._CreatedByUserID.Equals(value) = false) Then
+				Me.OnCreatedByUserIDChanging(value)
+				Me.SendPropertyChanging
+				Me._CreatedByUserID = value
+				Me.SendPropertyChanged("CreatedByUserID")
+				Me.OnCreatedByUserIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_CreatedOnDate", DbType:="DateTime")>  _
+	Public Property CreatedOnDate() As System.Nullable(Of Date)
+		Get
+			Return Me._CreatedOnDate
+		End Get
+		Set
+			If (Me._CreatedOnDate.Equals(value) = false) Then
+				Me.OnCreatedOnDateChanging(value)
+				Me.SendPropertyChanging
+				Me._CreatedOnDate = value
+				Me.SendPropertyChanged("CreatedOnDate")
+				Me.OnCreatedOnDateChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_LastModifiedByUserID", DbType:="Int")>  _
+	Public Property LastModifiedByUserID() As System.Nullable(Of Integer)
+		Get
+			Return Me._LastModifiedByUserID
+		End Get
+		Set
+			If (Me._LastModifiedByUserID.Equals(value) = false) Then
+				Me.OnLastModifiedByUserIDChanging(value)
+				Me.SendPropertyChanging
+				Me._LastModifiedByUserID = value
+				Me.SendPropertyChanged("LastModifiedByUserID")
+				Me.OnLastModifiedByUserIDChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_LastModifiedOnDate", DbType:="DateTime")>  _
+	Public Property LastModifiedOnDate() As System.Nullable(Of Date)
+		Get
+			Return Me._LastModifiedOnDate
+		End Get
+		Set
+			If (Me._LastModifiedOnDate.Equals(value) = false) Then
+				Me.OnLastModifiedOnDateChanging(value)
+				Me.SendPropertyChanging
+				Me._LastModifiedOnDate = value
+				Me.SendPropertyChanged("LastModifiedOnDate")
+				Me.OnLastModifiedOnDateChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_Status", DbType:="Int NOT NULL")>  _
+	Public Property Status() As Integer
+		Get
+			Return Me._Status
+		End Get
+		Set
+			If ((Me._Status = value)  _
+						= false) Then
+				Me.OnStatusChanging(value)
+				Me.SendPropertyChanging
+				Me._Status = value
+				Me.SendPropertyChanged("Status")
+				Me.OnStatusChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_SecurityMode", DbType:="Int NOT NULL")>  _
+	Public Property SecurityMode() As Integer
+		Get
+			Return Me._SecurityMode
+		End Get
+		Set
+			If ((Me._SecurityMode = value)  _
+						= false) Then
+				Me.OnSecurityModeChanging(value)
+				Me.SendPropertyChanging
+				Me._SecurityMode = value
+				Me.SendPropertyChanged("SecurityMode")
+				Me.OnSecurityModeChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_IsSystemRole", DbType:="Bit NOT NULL")>  _
+	Public Property IsSystemRole() As Boolean
+		Get
+			Return Me._IsSystemRole
+		End Get
+		Set
+			If ((Me._IsSystemRole = value)  _
+						= false) Then
+				Me.OnIsSystemRoleChanging(value)
+				Me.SendPropertyChanging
+				Me._IsSystemRole = value
+				Me.SendPropertyChanged("IsSystemRole")
+				Me.OnIsSystemRoleChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="Role_UserRole", Storage:="_UserRoles", ThisKey:="RoleID", OtherKey:="RoleID")>  _
+	Public Property UserRoles() As EntitySet(Of UserRole)
+		Get
+			Return Me._UserRoles
+		End Get
+		Set
+			Me._UserRoles.Assign(value)
+		End Set
+	End Property
+	
+	Public Event PropertyChanging As PropertyChangingEventHandler Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
+	
+	Public Event PropertyChanged As PropertyChangedEventHandler Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+	
+	Protected Overridable Sub SendPropertyChanging()
+		If ((Me.PropertyChangingEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanging(Me, emptyChangingEventArgs)
+		End If
+	End Sub
+	
+	Protected Overridable Sub SendPropertyChanged(ByVal propertyName As [String])
+		If ((Me.PropertyChangedEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
+		End If
+	End Sub
+	
+	Private Sub attach_UserRoles(ByVal entity As UserRole)
+		Me.SendPropertyChanging
+		entity.Role = Me
+	End Sub
+	
+	Private Sub detach_UserRoles(ByVal entity As UserRole)
+		Me.SendPropertyChanging
+		entity.Role = Nothing
+	End Sub
+End Class
+
+<Global.System.Data.Linq.Mapping.TableAttribute(Name:="dbo.AP_StaffBroker_LeaderMeta")>  _
+Partial Public Class AP_StaffBroker_LeaderMeta
+	Implements System.ComponentModel.INotifyPropertyChanging, System.ComponentModel.INotifyPropertyChanged
+	
+	Private Shared emptyChangingEventArgs As PropertyChangingEventArgs = New PropertyChangingEventArgs(String.Empty)
+	
+	Private _LeaderMetaId As Long
+	
+	Private _UserId As Integer
+	
+	Private _LeaderId As Integer
+	
+	Private _DelegateId As System.Nullable(Of Integer)
+	
+	Private _User As EntityRef(Of User)
+	
+	Private _Leader As EntityRef(Of User)
+	
+	Private _Delegate As EntityRef(Of User)
+	
+    #Region "Extensibility Method Definitions"
+    Partial Private Sub OnLoaded()
+    End Sub
+    Partial Private Sub OnValidate(action As System.Data.Linq.ChangeAction)
+    End Sub
+    Partial Private Sub OnCreated()
+    End Sub
+    Partial Private Sub OnLeaderMetaIdChanging(value As Long)
+    End Sub
+    Partial Private Sub OnLeaderMetaIdChanged()
+    End Sub
+    Partial Private Sub OnUserIdChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnUserIdChanged()
+    End Sub
+    Partial Private Sub OnLeaderIdChanging(value As Integer)
+    End Sub
+    Partial Private Sub OnLeaderIdChanged()
+    End Sub
+    Partial Private Sub OnDelegateIdChanging(value As System.Nullable(Of Integer))
+    End Sub
+    Partial Private Sub OnDelegateIdChanged()
+    End Sub
+    #End Region
+	
+	Public Sub New()
+		MyBase.New
+		Me._User = CType(Nothing, EntityRef(Of User))
+		Me._Leader = CType(Nothing, EntityRef(Of User))
+		Me._Delegate = CType(Nothing, EntityRef(Of User))
+		OnCreated
+	End Sub
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_LeaderMetaId", AutoSync:=AutoSync.OnInsert, DbType:="BigInt NOT NULL IDENTITY", IsPrimaryKey:=true, IsDbGenerated:=true)>  _
+	Public Property LeaderMetaId() As Long
+		Get
+			Return Me._LeaderMetaId
+		End Get
+		Set
+			If ((Me._LeaderMetaId = value)  _
+						= false) Then
+				Me.OnLeaderMetaIdChanging(value)
+				Me.SendPropertyChanging
+				Me._LeaderMetaId = value
+				Me.SendPropertyChanged("LeaderMetaId")
+				Me.OnLeaderMetaIdChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_UserId", DbType:="Int NOT NULL")>  _
+	Public Property UserId() As Integer
+		Get
+			Return Me._UserId
+		End Get
+		Set
+			If ((Me._UserId = value)  _
+						= false) Then
+				If Me._User.HasLoadedOrAssignedValue Then
+					Throw New System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException()
+				End If
+				Me.OnUserIdChanging(value)
+				Me.SendPropertyChanging
+				Me._UserId = value
+				Me.SendPropertyChanged("UserId")
+				Me.OnUserIdChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_LeaderId", DbType:="Int NOT NULL")>  _
+	Public Property LeaderId() As Integer
+		Get
+			Return Me._LeaderId
+		End Get
+		Set
+			If ((Me._LeaderId = value)  _
+						= false) Then
+				If Me._Leader.HasLoadedOrAssignedValue Then
+					Throw New System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException()
+				End If
+				Me.OnLeaderIdChanging(value)
+				Me.SendPropertyChanging
+				Me._LeaderId = value
+				Me.SendPropertyChanged("LeaderId")
+				Me.OnLeaderIdChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_DelegateId", DbType:="Int")>  _
+	Public Property DelegateId() As System.Nullable(Of Integer)
+		Get
+			Return Me._DelegateId
+		End Get
+		Set
+			If (Me._DelegateId.Equals(value) = false) Then
+				If Me._Delegate.HasLoadedOrAssignedValue Then
+					Throw New System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException()
+				End If
+				Me.OnDelegateIdChanging(value)
+				Me.SendPropertyChanging
+				Me._DelegateId = value
+				Me.SendPropertyChanged("DelegateId")
+				Me.OnDelegateIdChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_AP_StaffBroker_LeaderMeta", Storage:="_User", ThisKey:="UserId", OtherKey:="UserID", IsForeignKey:=true)>  _
+	Public Property User() As User
+		Get
+			Return Me._User.Entity
+		End Get
+		Set
+			Dim previousValue As User = Me._User.Entity
+			If ((Object.Equals(previousValue, value) = false)  _
+						OrElse (Me._User.HasLoadedOrAssignedValue = false)) Then
+				Me.SendPropertyChanging
+				If ((previousValue Is Nothing)  _
+							= false) Then
+					Me._User.Entity = Nothing
+					previousValue.AP_StaffBroker_LeaderMetas.Remove(Me)
+				End If
+				Me._User.Entity = value
+				If ((value Is Nothing)  _
+							= false) Then
+					value.AP_StaffBroker_LeaderMetas.Add(Me)
+					Me._UserId = value.UserID
+				Else
+					Me._UserId = CType(Nothing, Integer)
+				End If
+				Me.SendPropertyChanged("User")
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_AP_StaffBroker_LeaderMeta1", Storage:="_Leader", ThisKey:="LeaderId", OtherKey:="UserID", IsForeignKey:=true)>  _
+	Public Property Leader() As User
+		Get
+			Return Me._Leader.Entity
+		End Get
+		Set
+			Dim previousValue As User = Me._Leader.Entity
+			If ((Object.Equals(previousValue, value) = false)  _
+						OrElse (Me._Leader.HasLoadedOrAssignedValue = false)) Then
+				Me.SendPropertyChanging
+				If ((previousValue Is Nothing)  _
+							= false) Then
+					Me._Leader.Entity = Nothing
+					previousValue.LeaderOf.Remove(Me)
+				End If
+				Me._Leader.Entity = value
+				If ((value Is Nothing)  _
+							= false) Then
+					value.LeaderOf.Add(Me)
+					Me._LeaderId = value.UserID
+				Else
+					Me._LeaderId = CType(Nothing, Integer)
+				End If
+				Me.SendPropertyChanged("Leader")
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="User_AP_StaffBroker_LeaderMeta2", Storage:="_Delegate", ThisKey:="DelegateId", OtherKey:="UserID", IsForeignKey:=true)>  _
+	Public Property [Delegate]() As User
+		Get
+			Return Me._Delegate.Entity
+		End Get
+		Set
+			Dim previousValue As User = Me._Delegate.Entity
+			If ((Object.Equals(previousValue, value) = false)  _
+						OrElse (Me._Delegate.HasLoadedOrAssignedValue = false)) Then
+				Me.SendPropertyChanging
+				If ((previousValue Is Nothing)  _
+							= false) Then
+					Me._Delegate.Entity = Nothing
+					previousValue.DelegateOf.Remove(Me)
+				End If
+				Me._Delegate.Entity = value
+				If ((value Is Nothing)  _
+							= false) Then
+					value.DelegateOf.Add(Me)
+					Me._DelegateId = value.UserID
+				Else
+					Me._DelegateId = CType(Nothing, Nullable(Of Integer))
+				End If
+				Me.SendPropertyChanged("[Delegate]")
+			End If
+		End Set
+	End Property
+	
+	Public Event PropertyChanging As PropertyChangingEventHandler Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
+	
+	Public Event PropertyChanged As PropertyChangedEventHandler Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+	
+	Protected Overridable Sub SendPropertyChanging()
+		If ((Me.PropertyChangingEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanging(Me, emptyChangingEventArgs)
+		End If
+	End Sub
+	
+	Protected Overridable Sub SendPropertyChanged(ByVal propertyName As [String])
+		If ((Me.PropertyChangedEvent Is Nothing)  _
+					= false) Then
+			RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
+		End If
+	End Sub
+End Class
+
+<Global.System.Data.Linq.Mapping.TableAttribute(Name:="dbo.AP_MPD_CountryAdmin")>  _
+Partial Public Class AP_MPD_CountryAdmin
+	Implements System.ComponentModel.INotifyPropertyChanging, System.ComponentModel.INotifyPropertyChanged
+	
+	Private Shared emptyChangingEventArgs As PropertyChangingEventArgs = New PropertyChangingEventArgs(String.Empty)
+	
+	Private _Id As Long
+	
+	Private _sso_guid As String
+	
+	Private _ministry_id As Integer
+	
+	Private _AP_mpd_Country As EntityRef(Of AP_mpd_Country)
+	
+    #Region "Extensibility Method Definitions"
+    Partial Private Sub OnLoaded()
+    End Sub
+    Partial Private Sub OnValidate(action As System.Data.Linq.ChangeAction)
+    End Sub
+    Partial Private Sub OnCreated()
+    End Sub
+    Partial Private Sub OnIdChanging(value As Long)
+    End Sub
+    Partial Private Sub OnIdChanged()
+    End Sub
+    Partial Private Sub Onsso_guidChanging(value As String)
+    End Sub
+    Partial Private Sub Onsso_guidChanged()
+    End Sub
+    Partial Private Sub Onministry_idChanging(value As Integer)
+    End Sub
+    Partial Private Sub Onministry_idChanged()
+    End Sub
+    #End Region
+	
+	Public Sub New()
+		MyBase.New
+		Me._AP_mpd_Country = CType(Nothing, EntityRef(Of AP_mpd_Country))
+		OnCreated
+	End Sub
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_Id", AutoSync:=AutoSync.OnInsert, DbType:="BigInt NOT NULL IDENTITY", IsPrimaryKey:=true, IsDbGenerated:=true)>  _
+	Public Property Id() As Long
+		Get
+			Return Me._Id
+		End Get
+		Set
+			If ((Me._Id = value)  _
+						= false) Then
+				Me.OnIdChanging(value)
+				Me.SendPropertyChanging
+				Me._Id = value
+				Me.SendPropertyChanged("Id")
+				Me.OnIdChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_sso_guid", DbType:="Char(36) NOT NULL", CanBeNull:=false)>  _
+	Public Property sso_guid() As String
+		Get
+			Return Me._sso_guid
+		End Get
+		Set
+			If (String.Equals(Me._sso_guid, value) = false) Then
+				Me.Onsso_guidChanging(value)
+				Me.SendPropertyChanging
+				Me._sso_guid = value
+				Me.SendPropertyChanged("sso_guid")
+				Me.Onsso_guidChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.ColumnAttribute(Storage:="_ministry_id", DbType:="Int NOT NULL")>  _
+	Public Property ministry_id() As Integer
+		Get
+			Return Me._ministry_id
+		End Get
+		Set
+			If ((Me._ministry_id = value)  _
+						= false) Then
+				If Me._AP_mpd_Country.HasLoadedOrAssignedValue Then
+					Throw New System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException()
+				End If
+				Me.Onministry_idChanging(value)
+				Me.SendPropertyChanging
+				Me._ministry_id = value
+				Me.SendPropertyChanged("ministry_id")
+				Me.Onministry_idChanged
+			End If
+		End Set
+	End Property
+	
+	<Global.System.Data.Linq.Mapping.AssociationAttribute(Name:="AP_mpd_Country_AP_MPD_CountryAdmin", Storage:="_AP_mpd_Country", ThisKey:="ministry_id", OtherKey:="mpdCountryId", IsForeignKey:=true)>  _
+	Public Property AP_mpd_Country() As AP_mpd_Country
+		Get
+			Return Me._AP_mpd_Country.Entity
+		End Get
+		Set
+			Dim previousValue As AP_mpd_Country = Me._AP_mpd_Country.Entity
+			If ((Object.Equals(previousValue, value) = false)  _
+						OrElse (Me._AP_mpd_Country.HasLoadedOrAssignedValue = false)) Then
+				Me.SendPropertyChanging
+				If ((previousValue Is Nothing)  _
+							= false) Then
+					Me._AP_mpd_Country.Entity = Nothing
+					previousValue.AP_MPD_CountryAdmins.Remove(Me)
+				End If
+				Me._AP_mpd_Country.Entity = value
+				If ((value Is Nothing)  _
+							= false) Then
+					value.AP_MPD_CountryAdmins.Add(Me)
+					Me._ministry_id = value.mpdCountryId
+				Else
+					Me._ministry_id = CType(Nothing, Integer)
+				End If
+				Me.SendPropertyChanged("AP_mpd_Country")
 			End If
 		End Set
 	End Property
