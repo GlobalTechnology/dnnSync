@@ -53,10 +53,11 @@ Module Module1
     Dim root_key = ""
     Dim stage As Boolean = False
     Dim excludeList As String() = {"id", "client_integration_id", "ministry", "authentication.key_guid", "authentication.client_integration_id"}
-
+    Dim areas As New Dictionary(Of String, String)
     Dim staff_types As New Dictionary(Of String, String)
 
     Dim out_log As String = ""
+    Dim areas_ents As List(Of Entity)
 
     Sub Main(ByVal args As String())
 
@@ -84,8 +85,12 @@ Module Module1
             access_token = ConfigurationManager.AppSettings("gma_status_api_key")
             root_key = ConfigurationManager.AppSettings("oib_root")
         End If
-
-
+        Dim gr_area As New GR(root_key, gr_server, False)
+        areas.Clear()
+        areas_ents = gr_area.GetEntities("area", "")
+        For Each row In areas_ents
+            areas.Add(row.ID, row.GetPropertyValue("area_code"))
+        Next
 
 
         refresh = args.Contains("-refresh")
@@ -185,7 +190,7 @@ Module Module1
 
 
 
-            If Not String.IsNullOrEmpty(ministry_id) Then
+            If (Not String.IsNullOrEmpty(ministry_id)) Or api_key.PortalId = 5 Then
 
 
                 CheckCreateProperty(api_key.PortalId, "gr_person_id", 349, 0)
@@ -193,16 +198,18 @@ Module Module1
 
 
                 Dim gr As New GR(api_key.SettingValue, gr_server)
+                If Not api_key.PortalId = 5 Then
 
-                Dim update As New Entity()
-                update.ID = ministry_id
-                update.AddPropertyValue("client_integration_id", api_key.PortalId)
-                Dim startPeriod = (From c In d.AP_StaffBroker_Settings Where c.SettingName = "FirstFiscalMonth" And c.PortalId = api_key.PortalId Select c.SettingValue).FirstOrDefault
-                If Not String.IsNullOrEmpty(startPeriod) Then
-                    update.AddPropertyValue("fiscal_start_month", startPeriod)
+
+                    Dim update As New Entity()
+                    update.ID = ministry_id
+                    update.AddPropertyValue("client_integration_id", api_key.PortalId)
+                    Dim startPeriod = (From c In d.AP_StaffBroker_Settings Where c.SettingName = "FirstFiscalMonth" And c.PortalId = api_key.PortalId Select c.SettingValue).FirstOrDefault
+                    If Not String.IsNullOrEmpty(startPeriod) Then
+                        update.AddPropertyValue("fiscal_start_month", startPeriod)
+                    End If
+                    gr.UpdateEntity(update, "ministry")
                 End If
-                gr.UpdateEntity(update, "ministry")
-
 
 
                 Dim st_whitelist = {"National Staff", "National Staff, Overseas", "Centrally Funded", "Overseas Staff, in Country", "Overseas Staff, Overseas"}
@@ -239,6 +246,41 @@ Module Module1
                     End If
                 Next
 
+                If Not api_key.PortalId = 5 Then
+
+
+                    'Now sync leadership meta (now that all the people exist
+                    For Each row In d.AP_StaffBroker_LeaderMetas.Where(Function(c) c.User.AP_StaffBroker_Staffs.PortalId = api_key.PortalId)
+                        Dim gr_assignee_id = GetProfileProperty(row.User.UserProfiles, "gr_person_id", Nothing)
+
+                        If Not gr_assignee_id Is Nothing Then
+                            If Not row.Leader Is Nothing Then
+                                Try
+
+
+                                    Dim gr_leader_id = GetProfileProperty(row.Leader.UserProfiles, "gr_person_id", Nothing)
+                                    If Not gr_leader_id Is Nothing Then
+                                        gr.RelateEntity("person", gr_assignee_id, "person", gr_leader_id, "leader", "", row.UserId, row.LeaderId)
+                                    End If
+                                Catch ex As Exception
+                                    Console.Write(ex.ToString)
+                                End Try
+                            End If
+
+                            If Not row.Delegate Is Nothing Then
+                                Dim gr_delegate_id = GetProfileProperty(row.User.UserProfiles, "gr_person_id", Nothing)
+                                gr.RelateEntity("person", gr_assignee_id, "person", gr_delegate_id, "leader", "", row.UserId, row.LeaderId)
+
+                            End If
+                        End If
+
+
+
+
+
+                        'TODO remove expired leadership assignments
+                    Next
+                End If
 
 
 
@@ -270,8 +312,13 @@ Module Module1
     'End Sub
     Private Sub SyncMinisitries()
 
-        Dim gr_min As New GR(root_key, gr_server)
-        Dim gr_back As New GR(root_key, "http://backend.global-registry.org/")
+
+
+        Dim gr_min As New GR(root_key, gr_server, False)
+        Dim gr_back As New GR(root_key, "http://backend.global-registry.org/", False)
+
+
+
         'Get measureents
 
 
@@ -329,13 +376,55 @@ Module Module1
                 person.Key_GUID = p.GetPropertyValue("authentication.key_guid")
                 person.membership_type = min_mem.GetPropertyValue("membership_type")
                 person.isNationalStaff = person.membership_type.Contains("National Staff")
-              
+                If p.collections.ContainsKey("leader:relationship") Then
 
+
+                    For Each rel In p.collections("leader:relationship")
+                        Dim q = From c In d.ap_mpd_user_reportings Where c.mpd_user_id = person.gr_person_id And c.mpd_leader_id = rel.GetPropertyValue("person")
+                        If q.Count = 0 Then
+                            Dim insert As New ap_mpd_user_reporting
+                            insert.mpd_user_id = person.gr_person_id
+                            insert.mpd_leader_id = rel.GetPropertyValue("person")
+                            Dim leader = From c In d.Ap_mpd_Users Where c.gr_person_id = insert.mpd_leader_id And Not c.Key_GUID Is Nothing
+                            If leader.Count > 0 Then
+                                insert.leader_sso_guid = leader.First.Key_GUID
+                            End If
+                            d.ap_mpd_user_reportings.InsertOnSubmit(insert)
+                            d.SubmitChanges()
+                        End If
+                    Next
+                End If
             Next
+
+
+
+
             d.SubmitChanges()
         End If
 
+        For Each row In areas_ents
+            If row.collections.ContainsKey("admin:relationship") Then
+                For Each admin In row.collections("admin:relationship")
+                    Dim p = gr_min.GetEntity(admin.GetPropertyValue("person"))
+                    Dim ssoCode = p.GetPropertyValue("authentication.key_guid")
+                    If Not String.IsNullOrEmpty(ssoCode) Then
+                        Dim q = From c In d.AP_mpd_AreaAdmins Where c.sso_guid = ssoCode And c.area = areas(row.ID)
+                        If q.Count = 0 Then
+                            Dim insert As New AP_mpd_AreaAdmin
+                            insert.area = areas(row.ID)
 
+                            insert.sso_guid = ssoCode
+
+                            d.AP_mpd_AreaAdmins.InsertOnSubmit(insert)
+                            d.SubmitChanges()
+
+
+                        End If
+                    End If
+
+                Next
+            End If
+        Next
 
         For i As Integer = -12 To 0
             Dim allMeasurements As New List(Of Measurement)
@@ -377,6 +466,7 @@ Module Module1
                         country = New AP_mpd_Country
                         country.name = min_ent.GetPropertyValue("name")
                         country.gr_ministry_id = min_id
+                        country.Area = areas(min_ent.GetPropertyValue("area:relationship.area"))
                         Dim iso = gr_min.GetEntity(min_ent.GetPropertyValue("iso_country:relationship.iso_country"))
 
                         country.isoCode = iso.GetPropertyValue("iso2_code")
@@ -409,7 +499,7 @@ Module Module1
                     '    Dim p = gr_min.GetEntity(min_mem.GetPropertyValue("person.id"))
                     '    dbUser.Key_GUID = p.GetPropertyValue("authentication.key_guid")
                     '    d.SubmitChanges()
-            
+
 
                 End If
                 'update measurements
@@ -419,27 +509,27 @@ Module Module1
 
 
                     If q.Count > 0 Then
-                        q.First.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Sum(Function(c) c.Value)
-                        q.First.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Sum(Function(c) c.Value)
-                        q.First.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Sum(Function(c) c.Value)
-                        q.First.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Sum(Function(c) c.Value)
-                        q.First.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Sum(Function(c) c.Value)
+                        q.First.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Select(Function(c) c.Value).FirstOrDefault
+                        q.First.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Select(Function(c) c.Value).FirstOrDefault
+                        q.First.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Select(Function(c) c.Value).FirstOrDefault
+                        q.First.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Select(Function(c) c.Value).FirstOrDefault
+                        q.First.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Select(Function(c) c.Value).FirstOrDefault
 
 
-                        q.First.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Sum(Function(c) c.Value)
-                        q.First.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Sum(Function(c) c.Value)
+                        q.First.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Select(Function(c) c.Value).FirstOrDefault
+                        q.First.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Select(Function(c) c.Value).FirstOrDefault
 
 
 
                     Else
                         Dim insertM As New AP_mpd_UserAccountInfo
-                        insertM.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Sum(Function(c) c.Value)
-                        insertM.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Sum(Function(c) c.Value)
-                        insertM.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Sum(Function(c) c.Value)
-                        insertM.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Sum(Function(c) c.Value)
-                        insertM.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Sum(Function(c) c.Value)
-                        insertM.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Sum(Function(c) c.Value)
-                        insertM.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Sum(Function(c) c.Value)
+                        insertM.balance = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_BAL).Select(Function(c) c.Value).FirstOrDefault
+                        insertM.expense = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_EXP).Select(Function(c) c.Value).FirstOrDefault
+                        insertM.foreignIncome = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_FOREIGN).Select(Function(c) c.Value).FirstOrDefault
+                        insertM.income = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_LOC).Select(Function(c) c.Value).FirstOrDefault
+                        insertM.compensation = person.Group.Where(Function(c) c.MeasurementTypeId = GR_ACC_INC_SUB).Select(Function(c) c.Value).FirstOrDefault
+                        insertM.expBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_EXP).Select(Function(c) c.Value).FirstOrDefault
+                        insertM.toRaiseBudget = person.Group.Where(Function(c) c.MeasurementTypeId = GR_MPD_GOAL).Select(Function(c) c.Value).FirstOrDefault
                         insertM.period = Today.AddMonths(i).ToString("yyyy-MM")
                         insertM.mpdUserId = dbUser.AP_mpd_UserId
                         insertM.mpdCountryId = dbUser.mpdCountryId
@@ -557,6 +647,13 @@ Module Module1
             If the_country.portalId Is Nothing Then
                 the_country.portalId = (From c In d.AP_StaffBroker_Settings Where c.SettingName = "gr_ministry_id" And c.SettingValue = the_country.gr_ministry_id Select c.PortalId).FirstOrDefault()
             End If
+
+            If refresh Then
+                Dim min_ent = gr_min.GetEntity(the_country.gr_ministry_id)
+                the_country.Area = areas(min_ent.GetPropertyValue("area:relationship.area"))
+
+            End If
+
 
             '  Dim countryAvg = From c In the_country.Ap_mpd_Users Where c.mpdCountryId = the_country.mpdCountryId
             Dim countryUsers = From c In the_country.Ap_mpd_Users Where c.isNationalStaff
@@ -744,31 +841,57 @@ Module Module1
         Dim isAdmin = u.UserRoles.Where(Function(c) c.Role.RoleName = "Administrators").Count > 0
         Dim isFinance = u.UserRoles.Where(Function(c) c.Role.RoleName = "Accounts Team").Count > 0
         Dim isMPD = u.UserRoles.Where(Function(c) c.Role.RoleName = "MPD Admin").Count > 0
+        Dim isArea = u.UserRoles.Where(Function(c) c.Role.RoleName = "AreaAdmin").Count > 0
         p.ID = gr_id
-        p.AddPropertyValue("ministry:relationship.ministry", ministry_id)
-        p.AddPropertyValue("ministry:relationship.client_integration_id", u.UserID & "_" & Portalid)
-        Dim i As Integer = 0
-        If isAdmin Then
-            p.AddPropertyValue("ministry:relationship.role[" & i & "]", "Administrator")
-            i += 1
+        If Not Portalid = 5 Then
+
+
+            p.AddPropertyValue("ministry:relationship.ministry", ministry_id)
+            p.AddPropertyValue("ministry:relationship.client_integration_id", u.UserID & "_" & Portalid)
+            Dim i As Integer = 0
+            If isAdmin Then
+                p.AddPropertyValue("ministry:relationship.role[" & i & "]", "Administrator")
+                i += 1
+            End If
+            If isFinance Then
+                p.AddPropertyValue("ministry:relationship.role[" & i & "]", "Finance Team")
+                i += 1
+            End If
+            If isMPD Then
+                p.AddPropertyValue("ministry:relationship.role[" & i & "]", "MPD Admin")
+                i += 1
+            End If
         End If
-        If isFinance Then
-            p.AddPropertyValue("ministry:relationship.role[" & i & "]", "Finance Team")
-            i += 1
+        If isArea Then
+            Dim area_code = (From c In d.AP_StaffBroker_Settings Where c.PortalId = Portalid And c.SettingName = "area_code" Select c.SettingValue).FirstOrDefault
+            If Not String.IsNullOrEmpty(area_code) Then
+                Dim area_id = areas.Where(Function(c) c.Value = area_code).Select(Function(c) c.Key).FirstOrDefault
+                If Not String.IsNullOrEmpty(area_id) Then
+                    p.AddPropertyValue("area:relationship.area", area_id)
+                    p.AddPropertyValue("area:relationship.client_integration_id", u.UserID & "_" & area_code)
+
+                End If
+
+            End If
         End If
-        If isMPD Then
-            p.AddPropertyValue("ministry:relationship.role[" & i & "]", "MPD Admin")
-            i += 1
-        End If
-        If (staff_types.ContainsKey(s.AP_StaffBroker_StaffType.Name)) Then
+        If (staff_types.ContainsKey(s.AP_StaffBroker_StaffType.Name)) And Portalid <> 5 Then
             p.AddPropertyValue("ministry:relationship.membership_type", staff_types(s.AP_StaffBroker_StaffType.Name))
 
         End If
 
+        Dim casGuid = GetProfileProperty(u.UserProfiles, "ssoGUID", Nothing)
+        If String.IsNullOrEmpty(casGuid) Then
 
-        If (u.UserProfiles.Where(Function(c) c.ProfilePropertyDefinition.PropertyName = "ssoGUID").Count > 0) Then
-            p.AddPropertyValue("authentication.key_guid", GetProfileProperty(u.UserProfiles, "ssoGUID", Nothing))
-            p.AddPropertyValue("authentication.client_integration_id", GetProfileProperty(u.UserProfiles, "ssoGUID", Nothing))
+            'there is no cas guid... lets be nice and look it up now!
+            casGuid = GetSsoGuid(u.Username.TrimEnd(Portalid.ToString))
+            If Not String.IsNullOrEmpty(casGuid) Then
+                SetProfileProperty(u.UserID, Portalid, "ssoGUID", casGuid)
+            End If
+
+        End If
+        If Not String.IsNullOrEmpty(casGuid) Then
+            p.AddPropertyValue("authentication.key_guid", casGuid)
+            p.AddPropertyValue("authentication.client_integration_id", casGuid)
         End If
 
         If refresh Then
@@ -816,57 +939,42 @@ Module Module1
 
 
         gr_id = gr.UpdateEntity(p, "person")
+        If Not Portalid = 5 Then
+            Dim rel_id = GetProfileProperty(u.UserProfiles, "gr_ministry_membership_id", Nothing)
 
-        'WriteLog("Pushed " & gr_id)
-        Dim rel_id = GetProfileProperty(u.UserProfiles, "gr_ministry_membership_id", Nothing)
+            If String.IsNullOrEmpty(rel_id) Then
+                Dim the_person = gr.GetEntity(gr_id)
+                SetProfileProperty(u.UserID, Portalid, "gr_ministry_membership_id", the_person.GetPropertyValue("ministry:relationship.relationship_entity_id"))
 
-        If String.IsNullOrEmpty(rel_id) Then
-            Dim the_person = gr.GetEntity(gr_id)
-            SetProfileProperty(u.UserID, Portalid, "gr_ministry_membership_id", the_person.GetPropertyValue("ministry:relationship.relationship_entity_id"))
-
+            End If
         End If
 
 
 
-
-        'If Not tnt Is Nothing Then
-        '    tnt.pushSummariesForStaffmember(GetStaffProperty("R/C", s), gr, gr_id, m)
-        'End If
-
-        'WriteLog("pushed fin Summaries " & u.DisplayName)
-
-
-        ''sync the mpd data
-        'Dim q = From c In d.Ap_mpd_Users Where c.StaffId = s.StaffId
-
-        'For i As Integer = -14 To 0
-        '    Dim period_1 = Today.AddMonths(i).ToString("yyyyMM")
-        '    Dim period_2 = Today.AddMonths(i).ToString("yyyy-MM")
-        '    Dim sb = getBudgetForStaffPeriod(s.StaffId, period_1)
-        '    If Not sb Is Nothing Then
-        '        If Not sb.TotalBudget Is Nothing Then
-        '            m("ExpenseBudget").addMeasurement(gr_id, period_2, sb.TotalBudget)
-        '            m("ToRaiseBudget").addMeasurement(gr_id, period_2, sb.ToRaise)
-
-        '            'gr.AddUpdateMeasurement(gr_id, ExpenseBudget, period_2, sb.TotalBudget)
-        '            'gr.AddUpdateMeasurement(gr_id, ToRaiseBudget, period_2, sb.ToRaise)
-        '        End If
-
-        '    End If
-        'Next
-
-        'WriteLog("pushed mpd Summaries " & u.DisplayName)
-
-
         Return gr_id
-
-        'p.AddPropertyValue("address[1].city", GetProfileProperty(u.UserProfiles, "City"))
-        'p.AddPropertyValue("address[1].country", GetProfileProperty(u.UserProfiles, "Country"))
-        'p.AddPropertyValue("email_address[1].email", u.Username.TrimEnd(Portalid.ToString))
 
 
     End Function
 
+
+    Private Function GetSsoGuid(ByVal Username As String) As String
+        Try
+
+
+            Dim web As New WebClient()
+            web.Encoding = Encoding.UTF8
+
+            Dim endpoint = "https://thekey.me/cas/api/" & ConfigurationManager.AppSettings("thekey_key") & "/user/attributes?email=" & Username
+            Dim xml = web.DownloadString(endpoint)
+            If xml.Contains("""guid"" value=""") Then
+                Return xml.Substring(xml.IndexOf("""guid"" value=""") + 14, 36)
+
+            End If
+        Catch ex As Exception
+
+        End Try
+        Return ""
+    End Function
     Public Function getBudgetForStaffPeriod(ByVal StaffId As Integer, ByVal Period As String) As AP_mpdCalc_StaffBudget
         'Dim d As New MPD.MPDDataContext
 
